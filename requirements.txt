@@ -1,0 +1,7 @@
+numpy>=1.8
+mplstereonet
+pygsf
+matplotlib
+
+
+
