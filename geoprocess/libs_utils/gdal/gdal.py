@@ -119,6 +119,13 @@ def read_band(dataset: gdal.Dataset, bnd_ndx: int=1) -> Tuple[dict, 'np.array']:
 
 
 def try_read_raster_band(raster_source: str, bnd_ndx: int=1) -> Tuple[bool, Union[str, Tuple[GeoTransform, str, Dict, 'np.array']]]:
+    """
+    Deprecated. Use "read_raster_band" instead.
+
+    :param raster_source:
+    :param bnd_ndx:
+    :return:
+    """
 
     # get raster parameters and data
     try:
@@ -129,6 +136,44 @@ def try_read_raster_band(raster_source: str, bnd_ndx: int=1) -> Tuple[bool, Unio
     band_params, data = read_band(dataset, bnd_ndx)
 
     return True, (geotransform, projection, band_params, data)
+
+
+def read_raster_band(raster_source: str, bnd_ndx: int = 1) -> Dict:
+    """
+    Read parameters and values of a raster band.
+
+    :param raster_source: the raster path
+    :param bnd_ndx: the optional band index
+    :return: the band parameters
+    :rtype: Dict[bool, str, Optional[GeoTransform], Optional[str], Optional[Dict], Optional['np.array']]
+    """
+
+    raster_band = {}
+
+    # get raster parameters and data
+
+    try:
+
+        dataset, geotransform, num_bands, projection = read_raster(raster_source)
+        band_params, data = read_band(dataset, bnd_ndx)
+
+        raster_band["success"] = True
+        raster_band["message"] = ""
+        raster_band["geotransform"] = geotransform
+        raster_band["projection"] = projection
+        raster_band["band_params"] = band_params
+        raster_band["data"] = data
+
+    except (IOError, TypeError, RasterIOException) as err:
+
+        raster_band["success"] = False
+        raster_band["message"] = "Exception with reading {}: {}".format(raster_source, err)
+        raster_band["geotransform"] = None
+        raster_band["projection"] = None
+        raster_band["band_params"] = None
+        raster_band["data"] = None
+
+    return raster_band
 
 
 if __name__ == "__main__":
