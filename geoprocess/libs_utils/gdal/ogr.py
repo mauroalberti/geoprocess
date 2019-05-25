@@ -8,6 +8,14 @@ from osgeo import ogr, osr
 from .exceptions import *
 
 
+ogr_line_types = [
+    ogr.wkbLineString,
+    ogr.wkbLineString25D,
+    ogr.wkbLineStringM,
+    ogr.wkbLineStringZM
+]
+
+
 def try_open_shapefile(path: str) -> Tuple[bool, Union["OGRLayer", str]]:
 
     dataSource = ogr.Open(path)
@@ -23,9 +31,18 @@ def try_open_shapefile(path: str) -> Tuple[bool, Union["OGRLayer", str]]:
 def read_line_shapefile_via_ogr(line_shp_path: str) -> Dict:
     """
     Read line shapefile parameters using OGR.
+    The geometry type of the input shapefile must be LineString (MultiLineString is not currently managed).
+
+    It returns a dictionary made up of a few components:
+        success: Boolean, True for successful reading
+        projection: string, the spatial reference system expressd as wkt
+        extent: dictionary of four keys, representing x min and max values, y min and max values, i.e. the layer_extent
+        vertices: list of list of x, y, z coordinates, for each line
 
     :param line_shp_path:  parameter to check.
     :type line_shp_path:  QString or string
+    :return: the result of data reading
+    :rtype: dictionary
     """
 
     # check input path
@@ -37,62 +54,63 @@ def read_line_shapefile_via_ogr(line_shp_path: str) -> Dict:
 
     shape_driver = ogr.GetDriverByName("ESRI Shapefile")
 
-    line_shape = shape_driver.Open(str(line_shp_path), 0)
+    datasource = shape_driver.Open(str(line_shp_path), 0)
 
     # layer not read
 
-    if line_shape is None:
+    if datasource is None:
         return dict(success=False, error_message='Unable to open input shapefile')
 
     # get internal layer
 
-    layer = line_shape.GetLayer(0)
+    layer = datasource.GetLayer()
 
     # get projection
 
-    spatialRef = layer.GetSpatialRef()
+    spatialRef = layer.GetSpatialRef().ExportToPrettyWkt()
 
     # set vector layer extent
 
     layer_extent = layer.GetExtent()
     lines_extent = {'xmin': layer_extent[0], 'xmax': layer_extent[1], 'ymin': layer_extent[2], 'ymax': layer_extent[3]}
 
-    # initialize lists storing vertex coordinates of line
+    # initialize list storing vertex coordinates of lines
 
     lines = []
 
     # start reading layer features
 
-    curr_line = layer.GetNextFeature()
+    feature = layer.GetNextFeature()
 
     # loop in layer features
 
-    while curr_line:
+    while feature:
 
-        line_geom = curr_line.GetGeometryRef()
+        geometry = feature.GetGeometryRef()
 
-        if line_geom is None:
-            line_shape.Destroy()
+        if geometry is None:
+            datasource.Destroy()
             return dict(success=False, error_message='No geometry ref')
 
-        geometry_type = line_geom.GetGeometryType()
-        if geometry_type not in (ogr.wkbLineString, ogr.wkbMultiLineString):
-            line_shape.Destroy()
-            return dict(success=False, error_message='Not a linestring/multilinestring')
+        geometry_type = geometry.GetGeometryType()
+        if geometry_type not in ogr_line_types:
+            datasource.Destroy()
+            return dict(success=False, error_message='Not a linestring (possibly a multilinestring?)')
 
         line_xyz = []
 
-        for i in range(line_geom.GetPointCount()):
+        for i in range(geometry.GetPointCount()):
 
-            x, y, z = line_geom.GetX(i), line_geom.GetY(i), line_geom.GetZ(i)
+            x, y, z = geometry.GetX(i), geometry.GetY(i), geometry.GetZ(i)
 
             line_xyz.append((x, y, z))
 
         lines.append(line_xyz)
 
-        curr_line = layer.GetNextFeature()
+        feature.Destroy()
+        feature = layer.GetNextFeature()
 
-    line_shape.Destroy()
+    datasource.Destroy()
 
     return dict(success=True, projection=spatialRef, extent=lines_extent, vertices=lines)
 
