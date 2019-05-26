@@ -183,9 +183,7 @@ def topoline_from_dem(resampled_trace2d: Line, project_crs, dem, dem_params) -> 
     for trace_pt2d_dem_crs, trace_pt2d_project_crs in zip(trace2d_in_dem_crs.pts, resampled_trace2d.pts):
 
         fInterpolatedZVal = interpolate_z(dem, dem_params, trace_pt2d_dem_crs)
-        
-        #print(trace_pt2d_project_crs.x, trace_pt2d_project_crs.y, fInterpolatedZVal)
-        
+
         pt3dtPoint = Point(
             x=trace_pt2d_project_crs.x,
             y=trace_pt2d_project_crs.y,
@@ -194,7 +192,6 @@ def topoline_from_dem(resampled_trace2d: Line, project_crs, dem, dem_params) -> 
         lnProfile.add_pt(pt3dtPoint)
 
     return lnProfile
-
 
 
 def calculate_pts_in_projection(pts_in_orig_crs, srcCrs, destCrs):

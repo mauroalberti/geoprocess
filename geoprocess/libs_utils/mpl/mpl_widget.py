@@ -7,6 +7,7 @@
 from __future__ import division
 
 import numpy as np
+
 import matplotlib
 matplotlib.rcParams['backend'] = 'Qt5Agg'
 from matplotlib import rcParams
@@ -17,7 +18,25 @@ from matplotlib.figure import Figure
 from PyQt5.QtWidgets import *
 
 from .utils import valid_intervals
-from ...pygsf.plotting.stereonets import plot
+
+#from ...pygsf.plotting.stereonets import plot
+
+
+def plot_line(axes, x_list, y_list, linecolor="blue", name="", linewidth=1):
+
+    print("plotting line start")
+
+    line, = axes.plot(x_list, y_list, '-', color=linecolor, linewidth=linewidth)
+
+    if name is not None and name != "":
+        axes.annotate(name, xy=(x_list[0], y_list[0]), xycoords='data',
+                      xytext=(-40, 25), textcoords='offset points',
+                      size=8,
+                      arrowprops=dict(arrowstyle="fancy",
+                                      fc="0.6", ec="none",
+                                      patchB=line,
+                                      connectionstyle="angle3,angleA=0,angleB=-90"))
+    print("plotting line done")
 
 
 class MplCanvas(FigureCanvas):
@@ -82,23 +101,6 @@ class MplWidget(QWidget):
 
         # set the layout to the vertical box
         self.setLayout(self.vbl)
-
-
-def plot_line(axes, x_list, y_list, linecolor, name="", linewidth=1):
-
-    print("plotting line start")
-
-    line, = axes.plot(x_list, y_list, '-', color=linecolor, linewidth=linewidth)
-
-    if name is not None and name != "":
-        axes.annotate(name, xy=(x_list[0], y_list[0]), xycoords='data',
-                      xytext=(-40, 25), textcoords='offset points',
-                      size=8,
-                      arrowprops=dict(arrowstyle="fancy",
-                                      fc="0.6", ec="none",
-                                      patchB=line,
-                                      connectionstyle="angle3,angleA=0,angleB=-90"))
-    print("plotting line done")
 
 
 def plot_filled_line(axes, x_list, y_list, plot_y_min, facecolor, alpha=0.1):
