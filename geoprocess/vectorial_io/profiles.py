@@ -1,4 +1,13 @@
 
+from typing import List
+
+
+import xml
+
+
+from pygsf.spatial.vectorial.vectorial import Line
+from pygsf.spatial.profiles import TopoProfile
+
 
 def topoprofiles_from_dems(
     canvas: QgsMapCanvas,

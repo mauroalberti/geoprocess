@@ -11,9 +11,8 @@ import numpy as np
 from matplotlib import gridspec
 import matplotlib.pyplot as plt
 
-x = np.arange(0, 5, 0.1);
-y = np.sin(x)
-plt.plot(x, y)
+from pygsf.profiles.profiles import TopoProfile
+
 from ..libs_utils.qt.tools import qcolor2rgbmpl
 from ..libs_utils.mpl.mpl_widget import MplWidget, plot_line, plot_filled_line
 
@@ -24,22 +23,20 @@ colors_addit = ["darkseagreen", "darkgoldenrod", "darkviolet", "hotpink", "powde
                 "chartreuse"]
 
 
-def plot_line_profile(line: Line, color: str = "blue"):
+def plot_topoprofile(topo_profile: TopoProfile, color: str = "blue"):
     """
-    Plot a vertical profile given a 3D Line instance.
+    Plot a vertical profile given a TopoProfile instance.
 
-    :param line: Line instance.
-    :type line: Line.
+    :param topo_profile: TopoProfile instance.
+    :type topo_profile: TopoProfile.
     :param color: color.
     :type color: str.
     :return: None.
     """
 
-    pts = line.pts
+    x = topo_profile.profile_s()
+    y = topo_profile.elevations()
 
-
-    x = list(map(lambda pt: pt.x, pts))
-    y = list(map(lambda pt: pt.y, pts))
     plt.plot(x, y)
 
 
