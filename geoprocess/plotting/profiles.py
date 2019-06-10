@@ -23,7 +23,7 @@ colors_addit = ["darkseagreen", "darkgoldenrod", "darkviolet", "hotpink", "powde
                 "chartreuse"]
 
 
-def plot_topoprofile(topo_profile: TopoProfile, color: str = "blue"):
+def plot_topoprofile(topo_profile: TopoProfile, color: str = "blue", aspect=1):
     """
     Plot a vertical profile given a TopoProfile instance.
 
@@ -37,7 +37,11 @@ def plot_topoprofile(topo_profile: TopoProfile, color: str = "blue"):
     x = topo_profile.profile_s()
     y = topo_profile.elevations()
 
-    plt.plot(x, y)
+    fig, ax = plt.subplots()
+
+    ax.set_aspect(aspect)
+
+    ax.plot(x, y)
 
 
 def define_plot_structural_segment(structural_attitude, profile_length, vertical_exaggeration, segment_scale_factor=70.0):
