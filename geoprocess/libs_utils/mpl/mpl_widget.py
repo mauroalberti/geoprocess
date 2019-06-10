@@ -19,12 +19,12 @@ from PyQt5.QtWidgets import *
 
 from .utils import valid_intervals
 
-#from ...pygsf.plotting.stereonets import plot
+#from ...pygsf.stereonets.stereonets import plot
 
 
 def plot_line(axes, x_list, y_list, linecolor="blue", name="", linewidth=1):
 
-    print("plotting line start")
+    print("stereonets line start")
 
     line, = axes.plot(x_list, y_list, '-', color=linecolor, linewidth=linewidth)
 
@@ -36,7 +36,7 @@ def plot_line(axes, x_list, y_list, linecolor="blue", name="", linewidth=1):
                                       fc="0.6", ec="none",
                                       patchB=line,
                                       connectionstyle="angle3,angleA=0,angleB=-90"))
-    print("plotting line done")
+    print("stereonets line done")
 
 
 class MplCanvas(FigureCanvas):

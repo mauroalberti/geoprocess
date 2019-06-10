@@ -2,7 +2,7 @@
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 
-from pygsf.spatial.vectorial.vectorial import Line
+from pygsf.spatial.vectorial.geometries import Line
 from pygsf.spatial.rasters.geoarray import GeoArray
 
 
