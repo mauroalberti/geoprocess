@@ -1,9 +1,7 @@
 
 from typing import List
 
-
 import xml
-
 
 from pygsf.spatial.vectorial.geometries import Line
 from pygsf.spatial.profiles import TopoProfile

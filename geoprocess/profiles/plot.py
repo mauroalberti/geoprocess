@@ -1,8 +1,12 @@
 
+from typing import Union
+
+"""
 from builtins import zip
 from builtins import str
 from builtins import map
 from builtins import range
+"""
 
 from math import sin, cos, sqrt
 
@@ -11,10 +15,10 @@ import numpy as np
 from matplotlib import gridspec
 import matplotlib.pyplot as plt
 
-from geoprocess.profiles.base import TopoProfile
+from .base import TopoProfile
 
-from geoprocess.libs_utils.qt.tools import qcolor2rgbmpl
-from geoprocess.libs_utils.mpl.mpl_widget import MplWidget, plot_line, plot_filled_line
+from ..libs_utils.qt.tools import qcolor2rgbmpl
+from ..libs_utils.mpl.mpl_widget import MplWidget, plot_line, plot_filled_line
 
 
 colors_addit = ["darkseagreen", "darkgoldenrod", "darkviolet", "hotpink", "powderblue", "yellowgreen",
@@ -23,7 +27,7 @@ colors_addit = ["darkseagreen", "darkgoldenrod", "darkviolet", "hotpink", "powde
                 "chartreuse"]
 
 
-def plot_topoprofile(topo_profile: TopoProfile, color: str = "blue", aspect = 1, width: float = 18.5, height: float = 10.5):
+def plot_topoprofile(topo_profile: TopoProfile, color: str = "blue", aspect: Union[float, int] = 1, width: float = 18.5, height: float = 10.5):
     """
     Plot a vertical profile given a TopoProfile instance.
 
@@ -31,6 +35,12 @@ def plot_topoprofile(topo_profile: TopoProfile, color: str = "blue", aspect = 1,
     :type topo_profile: TopoProfile.
     :param color: color.
     :type color: str.
+    :param aspect: the profile aspect.
+    :type aspect: float, int.
+    :param width: the width of the produced figure, in inches.
+    :type width: float.
+    :param height: the height of the produced figure, in inches.
+    :type height: float.
     :return: None.
     """
 

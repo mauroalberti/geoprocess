@@ -83,14 +83,14 @@ class NavigatioToolbarModif(NavigationToolbar):
 
 class MplWidget(QWidget):
 
-    def __init__(self, window_title, type="", data=None, set_rc_params=True):
+    def __init__(self, window_title, wdg_type="", data=None, set_rc_params=True):
 
         super().__init__()
 
         self.setWindowTitle(window_title)
 
         # set the canvas and the navigation toolbar
-        self.canvas = MplCanvas(type, data, set_rc_params=set_rc_params)
+        self.canvas = MplCanvas(wdg_type, data, set_rc_params=set_rc_params)
 
         # create a vertical box layout
         self.vbl = QVBoxLayout()

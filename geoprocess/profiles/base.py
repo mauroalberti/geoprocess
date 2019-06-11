@@ -1,15 +1,16 @@
-from typing import List, Tuple
+from typing import List, Tuple, Optional, Dict
 
-from math import asin, cos, pi
+from math import sin, asin, cos, pi, radians, sqrt
 
 import numpy as np
 
+import itertools
 
 from pygsf.spatial.vectorial.geometries import *
 from pygsf.geodesy.geodetic import *
-from pygsf.geodesy.profiles import profile_parameters
 from pygsf.spatial.vectorial.geometries import Point, Segment, ParamLine3D
 from pygsf.orientations.orientations import Axis
+from pygsf.geodesy.geodetic import epsg_4326_str
 
 
 def profile_parameters(profile: Line) -> Tuple[List[float], List[float], List[float]]:
@@ -24,7 +25,7 @@ def profile_parameters(profile: Line) -> Tuple[List[float], List[float], List[fl
 
     # calculate 3D distances between consecutive points
 
-    if profile.crs == epsg_4326_str:
+    if profile.crs() == epsg_4326_str:
 
         # convert original values into ECEF values (x, y, z, time in ECEF global coordinate system)
         ecef_ln = profile.wgs842ecef()
@@ -180,6 +181,9 @@ class TopoProfile(object):
         :type inverted: bool.
         """
 
+        if line is None:
+            raise Exception("Line must not be None")
+
         self.line = line
         self.inverted = inverted
 
@@ -195,7 +199,6 @@ class TopoProfile(object):
 
         return list(itertools.accumulate(self.horiz_dist_values))
 
-    @property
     def profile_length(self) -> float:
         """
         Returns the length of the profile.
@@ -204,9 +207,8 @@ class TopoProfile(object):
         :rtype: float.
         """
 
-        return self.line.length_2d
+        return self.line.length_2d()
 
-    @property
     def profile_length_3d(self) -> float:
         """
         Returns the 3D length of the profile.
@@ -215,7 +217,7 @@ class TopoProfile(object):
         :rtype: float.
         """
 
-        return self.line.length_3d
+        return self.line.length_3d()
 
     def elevations(self) -> List[float]:
         """
@@ -225,9 +227,8 @@ class TopoProfile(object):
         :rtype: list of floats.
         """
 
-        return self.line.z_list
+        return self.line.z_list()
 
-    @property
     def elev_stats(self) -> Dict:
         """
         Calculates profile elevation statistics.
@@ -236,7 +237,7 @@ class TopoProfile(object):
         :rtype: Dict.
         """
 
-        return self.line.z_stats
+        return self.line.z_stats()
 
     def slopes(self) -> List[Optional[float]]:
         """
@@ -258,7 +259,6 @@ class TopoProfile(object):
 
         return self.line.abs_slopes()
 
-    @property
     def slopes_stats(self) -> Dict:
         """
         Calculates profile directional slopes statistics.
@@ -267,9 +267,8 @@ class TopoProfile(object):
         :rtype: Dict.
         """
 
-        return self.line.slopes_stats
+        return self.line.slopes_stats()
 
-    @property
     def absslopes_stats(self) -> Dict:
         """
         Calculates profile absolute slopes statistics.
@@ -278,7 +277,7 @@ class TopoProfile(object):
         :rtype: Dict.
         """
 
-        return self.line.abs_slopes_stats
+        return self.line.abs_slopes_stats()
 
 
 class GeoProfile(object):
@@ -373,7 +372,7 @@ class GeoProfile(object):
         :rtype: list of float values.
         """
 
-        return [topoprofile.profile_length_3d for topoprofile in self.topoprofiles]
+        return [topoprofile.profile_length_3d() for topoprofile in self.topoprofiles]
 
     def minmax_length_2d(self) -> Tuple[Optional[float], Optional[float]]:
         """
@@ -412,9 +411,9 @@ class GeoProfile(object):
         """
 
         topo_lines = [topo_profile.line for topo_profile in self.topoprofiles]
-        max_s = max(map(lambda line: line.length_2d, topo_lines))
-        min_z = min(map(lambda line: line.z_min, topo_lines))
-        max_z = max(map(lambda line: line.z_max, topo_lines))
+        max_s = max(map(lambda line: line.length_2d(), topo_lines))
+        min_z = min(map(lambda line: line.z_min(), topo_lines))
+        max_z = max(map(lambda line: line.z_max(), topo_lines))
 
         return max_s, min_z, max_z
 
@@ -426,7 +425,7 @@ class GeoProfile(object):
         :rtype: list of dictionaries.
         """
 
-        return [topoprofile.elev_stats for topoprofile in self.topoprofiles]
+        return [topoprofile.elev_stats() for topoprofile in self.topoprofiles]
 
     def slopes(self) -> List[List[Optional[float]]]:
         """
@@ -457,7 +456,7 @@ class GeoProfile(object):
         :rtype: List of dictionaries.
         """
 
-        return [topoprofile.slopes_stats for topoprofile in self.topoprofiles]
+        return [topoprofile.slopes_stats() for topoprofile in self.topoprofiles]
 
     def absslopes_stats(self) -> List[Dict]:
         """
@@ -468,7 +467,7 @@ class GeoProfile(object):
         :rtype: List of dictionaries.
         """
 
-        return [topoprofile.absslopes_stats for topoprofile in self.topoprofiles]
+        return [topoprofile.absslopes_stats() for topoprofile in self.topoprofiles]
 
     def min_z_plane_attitudes(self):
         """

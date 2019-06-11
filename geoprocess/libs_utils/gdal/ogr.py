@@ -304,7 +304,7 @@ def try_write_point_shapefile(path: str, field_names: List[str], values: List[Tu
 
         outshape_featdef = point_layer.GetLayerDefn()
 
-        for ndx, pt_vals in enumerate(values):
+        for pt_vals in values:
 
             # pre-processing for new feature in output layer
             curr_Pt_geom = ogr.Geometry(ogr.wkbPoint)
@@ -369,12 +369,12 @@ def try_write_line_shapefile(path: str, field_names: List[str], values: Dict) ->
 
         outshape_featdef = line_layer.GetLayerDefn()
 
-        for id in sorted(values.keys()):
+        for curr_id in sorted(values.keys()):
 
             # pre-processing for new feature in output layer
             line_geom = ogr.Geometry(ogr.wkbLineString)
 
-            for id_xyz in values[id]["pts"]:
+            for id_xyz in values[curr_id]["pts"]:
                 x, y, z = id_xyz
                 line_geom.AddPoint(x, y, z)
 
@@ -384,7 +384,7 @@ def try_write_line_shapefile(path: str, field_names: List[str], values: Dict) ->
 
             for ndx, fld_nm in enumerate(field_names):
 
-                line_shape.SetField(fld_nm, values[id]["vals"][ndx])
+                line_shape.SetField(fld_nm, values[curr_id]["vals"][ndx])
 
             # add the feature to the output layer
             line_layer.CreateFeature(line_shape)

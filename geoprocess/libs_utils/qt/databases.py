@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-from typing import List, Tuple, Dict, Optional, Union
+from typing import Tuple, Optional, Union
 
 from PyQt5.QtCore import QItemSelectionModel
 from PyQt5.QtSql import QSqlDatabase, QSqlQuery

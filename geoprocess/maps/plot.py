@@ -40,17 +40,18 @@ def plot_grid(geo_array: GeoArray, level_ndx: int = 0, cmap="jet", width: float 
     return fig
 
 
-def plot_line(fig: Figure, line: Line) -> None:
+def plot_line(fig: Figure, line: Line) -> Figure:
     """
     Plot a line.
 
-    :param ax: the figure in which to plot the line.
-    :type ax: Figure.
+    :param fig: the figure in which to plot the line.
+    :type fig: Figure.
     :param line: the line to plot.
     :type line: Line.
-    :return: None.
+    :return: the input Figure instance.
+    :rtype: Figure.
     """
 
-    fig.gca().plot(line.x_list, line.y_list, '-')
+    fig.gca().plot(line.x_list(), line.y_list(), '-')
     return fig
 

@@ -15,8 +15,8 @@ from qgis.gui import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 
-from ...pygsf.spatial.vectorial.geometries import Point, Segment, Line, MultiLine
-from ...pygsf.spatial.exceptions import VectorIOException
+from pygsf.spatial.vectorial.geometries import Point, Segment, Line, MultiLine
+from pygsf.spatial.exceptions import VectorIOException
 
 
 def calculate_azimuth_correction(src_pt: Point, crs: QgsCoordinateReferenceSystem) -> float:
@@ -82,7 +82,7 @@ def line_project(line: Line, srcCrs: QgsCoordinateReferenceSystem, destCrs: QgsC
     """
 
     points = []
-    for point in line.pts:
+    for point in line.pts():
         x, y, z = point.toXYZ()
         x, y = qgs_project_xy(
             x=x,
@@ -109,58 +109,10 @@ def multiline_project(multiline: MultiLine, srcCrs: QgsCoordinateReferenceSystem
     """
 
     lines = []
-    for line in multiline.lines:
+    for line in multiline.lines():
         lines.append(multiline_project(line, srcCrs, destCrs))
 
     return MultiLine(lines)
-
-
-def calculate_azimuth_correction(src_pt: Point, crs: QgsCoordinateReferenceSystem) -> float:
-    """
-    Calculates the empirical azimuth correction (angle between y-axis direction and geographic North)
-    for a given point.
-
-    :param src_pt: the point for which to calculate the correction.
-    :type src_pt: Point.
-    :param crs: the considered coordinate reference system.
-    :type crs: QgsCoordinateReferenceSystem.
-    :return: the azimuth angle.
-    :rtype: float.
-    """
-
-    # Calculates dip direction correction with respect to project CRS y-axis orientation
-
-    srcpt_prjcrs_x = src_pt.x
-    srcpt_prjcrs_y = src_pt.y
-
-    srcpt_epsg4326_lon, srcpt_epsg4326_lat = qgs_project_xy(
-        x=srcpt_prjcrs_x,
-        y=srcpt_prjcrs_y,
-        srcCrs=crs)
-
-    north_dummpy_pt_lon = srcpt_epsg4326_lon  # no change
-    north_dummpy_pt_lat = srcpt_epsg4326_lat + (1.0 / 1200.0)  # add 3 minute-seconds (approximately 90 meters)
-
-    dummypt_prjcrs_x, dummypt_prjcrs_y = qgs_project_xy(
-        x=north_dummpy_pt_lon,
-        y=north_dummpy_pt_lat,
-        destCrs=crs)
-
-    start_pt = Point(
-        srcpt_prjcrs_x,
-        srcpt_prjcrs_y)
-
-    end_pt = Point(
-        dummypt_prjcrs_x,
-        dummypt_prjcrs_y)
-
-    north_vector = Segment(
-        start_pt=start_pt,
-        end_pt=end_pt).vector()
-
-    azimuth_correction = north_vector.azimuth
-
-    return azimuth_correction
 
 
 def topoline_from_dem(resampled_trace2d: Line, project_crs, dem, dem_params) -> Line:
@@ -180,7 +132,7 @@ def topoline_from_dem(resampled_trace2d: Line, project_crs, dem, dem_params) -> 
 
     lnProfile = Line()
 
-    for trace_pt2d_dem_crs, trace_pt2d_project_crs in zip(trace2d_in_dem_crs.pts, resampled_trace2d.pts):
+    for trace_pt2d_dem_crs, trace_pt2d_project_crs in zip(trace2d_in_dem_crs.pts(), resampled_trace2d.pts()):
 
         fInterpolatedZVal = interpolate_z(dem, dem_params, trace_pt2d_dem_crs)
 
@@ -720,8 +672,8 @@ def qgs_project_xy(x: float, y: float, srcCrs: QgsCoordinateReferenceSystem = No
 def project_line_2d(srcLine, srcCrs, destCrs):
     
     destLine = Line()
-    for pt in srcLine._pts:        
-        srcPt = QgsPointXY(pt._x, pt._y)
+    for pt in srcLine.pts():
+        srcPt = QgsPointXY(pt.x, pt.y)
         destPt = qgs_project_point(srcPt, srcCrs, destCrs)
         destLine = destLine.add_pt(Point(destPt.x(), destPt.y()))
         

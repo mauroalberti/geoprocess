@@ -6,10 +6,10 @@ import os
 
 import numpy as np
 
-from ...defaults.types import *
-from ...defaults.constants import *
-from ...mathematics.scalars import areClose
-from .geoarray import GeoArray
+from pygsf.defaults.types import *
+from pygsf.defaults.constants import *
+from pygsf.mathematics.scalars import areClose
+from pygsf.spatial.raster.geoarray import GeoArray
 
 
 def try_write_esrigrid(geoarray: GeoArray, outgrid_fn: str, esri_nullvalue: Number=GRID_NULL_VALUE, level_ndx: int=0) -> Tuple[bool, str]:
@@ -51,7 +51,7 @@ def try_write_esrigrid(geoarray: GeoArray, outgrid_fn: str, esri_nullvalue: Numb
 
     arr = geoarray.level(level_ndx)
     if arr is None:
-        return False, "Array with index {} does not exist".format((level_ndx))
+        return False, "Array with index {} does not exist".format(level_ndx)
 
     num_rows, num_cols = arr.shape
     llc_x, llc_y = geoarray.level_llc(level_ndx)
