@@ -17,8 +17,8 @@ import matplotlib.pyplot as plt
 
 from .base import TopoProfile
 
-from ..libs_utils.qt.tools import qcolor2rgbmpl
-from ..libs_utils.mpl.mpl_widget import MplWidget, plot_line, plot_filled_line
+from geoprocess.widgets.qt_tools import qcolor2rgbmpl
+from geoprocess.widgets.mpl_widget import MplWidget, plot_line, plot_filled_line
 
 
 colors_addit = ["darkseagreen", "darkgoldenrod", "darkviolet", "hotpink", "powderblue", "yellowgreen",

@@ -17,7 +17,7 @@ from matplotlib.figure import Figure
 
 from PyQt5.QtWidgets import *
 
-from .utils import valid_intervals
+from geoprocess.widgets.utils import valid_intervals
 
 #from ...pygsf.stereonets.stereonets import plot
 

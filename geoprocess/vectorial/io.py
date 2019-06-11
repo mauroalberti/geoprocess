@@ -5,7 +5,12 @@ from typing import Dict, Tuple, Union, List
 
 from osgeo import ogr, osr
 
-from .exceptions import *
+
+class OGRIOException(Exception):
+    """
+    Exception for OGR IO parameters.
+    """
+    pass
 
 
 ogr_line_types = [

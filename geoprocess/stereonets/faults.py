@@ -2,7 +2,7 @@
 
 from typing import Optional
 
-from .exceptions import *
+from geoprocess.stereonets.exceptions import *
 
 
 def rake_to_apsg_movsense(rake: [int, float]) -> Optional[int]:

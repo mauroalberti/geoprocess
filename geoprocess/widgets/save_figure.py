@@ -6,7 +6,7 @@ from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtGui import *
 from qgis.PyQt.QtWidgets import *
 
-from ..qt.filesystem import define_path_new_file, old_file_path
+from geoprocess.widgets.qt_filesystem import define_path_new_file, old_file_path
 
 
 class FigureExportDetailedDlg(QDialog):
