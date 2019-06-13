@@ -5,6 +5,7 @@ matplotlib
 PyQt5
 gdal
 PyYAML
+geopandas
 
 
 
