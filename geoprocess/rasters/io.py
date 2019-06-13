@@ -4,6 +4,8 @@ from typing import Any, Tuple, Dict, Optional, Union
 
 import os
 
+from math import isfinite
+
 import numpy as np
 
 import gdal
@@ -108,23 +110,19 @@ def read_band(dataset: gdal.Dataset, bnd_ndx: int=1) -> Tuple[dict, 'np.array']:
     if grid_values is None:
         raise RasterIOException("Unable to read data from rasters")
 
-    # transform data into numpy array
-
-    data = np.asarray(grid_values)
-
     # if nodatavalue exists, set null values to NaN in numpy array
-    if noDataVal is not None and np.isfinite(noDataVal):
-        data = np.where(abs(data - noDataVal) > 1e-10, data, np.NaN)
+
+    if noDataVal is not None and isfinite(noDataVal):
+        grid_values = np.where(abs(grid_values - noDataVal) > 1e-10, grid_values, np.NaN)
 
     band_params = dict(
         dataType=data_type,
         unitType=unit_type,
         stats=dStats,
-        noData=noDataVal,
         numOverviews=nOverviews,
         numColorTableEntries=nColTableEntries)
 
-    return band_params, data
+    return band_params, grid_values
 
 
 def try_read_raster_band(raster_source: str, bnd_ndx: int=1) -> Tuple[bool, Union[str, Tuple[GeoTransform, str, Dict, 'np.array']]]:
@@ -181,12 +179,12 @@ if __name__ == "__main__":
 
 
 
-def try_write_esrigrid(geoarray: GeoArray, outgrid_fn: str, esri_nullvalue: Number=GRID_NULL_VALUE, level_ndx: int=0) -> Tuple[bool, str]:
+def try_write_esrigrid(geoarray: GeoArray, outgrid_flpth: str, esri_nullvalue: Number=GRID_NULL_VALUE, level_ndx: int=0) -> Tuple[bool, str]:
     """
     Writes ESRI ascii grid.
     
     :param geoarray: 
-    :param outgrid_fn: 
+    :param outgrid_flpth: 
     :param esri_nullvalue: 
     :param level_ndx: index of the level array to write.
     :type level_ndx: int.
@@ -194,20 +192,29 @@ def try_write_esrigrid(geoarray: GeoArray, outgrid_fn: str, esri_nullvalue: Numb
     :rtype: tuple made up by a boolean and a string
     """
     
-    outgrid_fn = str(outgrid_fn)
+    outgrid_flpth = str(outgrid_flpth)
+
+    out_fldr, out_flnm = os.path.split(outgrid_flpth)
+    if not out_flnm.lower().endswith('.asc'):
+        out_flnm += '.asc'
+
+    outgrid_flpth = os.path.join(
+        out_fldr,
+        out_flnm
+    )
 
     # checking existence of output slope grid
 
-    if os.path.exists(outgrid_fn):
-        return False, "Output grid '{}' already exists".format(outgrid_fn)
+    if os.path.exists(outgrid_flpth):
+        return False, "Output grid '{}' already exists".format(outgrid_flpth)
 
     try:
-        outputgrid = open(outgrid_fn, 'w')  # create the output ascii file
+        outputgrid = open(outgrid_flpth, 'w')  # create the output ascii file
     except Exception:
-        return False, "Unable to create output grid '{}'".format(outgrid_fn)
+        return False, "Unable to create output grid '{}'".format(outgrid_flpth)
 
     if outputgrid is None:
-        return False, "Unable to create output grid '{}'".format(outgrid_fn)
+        return False, "Unable to create output grid '{}'".format(outgrid_flpth)
 
     if geoarray.has_rotation:
         return False, "Grid has axes rotations defined"
@@ -232,7 +239,7 @@ def try_write_esrigrid(geoarray: GeoArray, outgrid_fn: str, esri_nullvalue: Numb
     outputgrid.write("XLLCORNER %.8f\n" % llc_x)
     outputgrid.write("YLLCORNER %.8f\n" % llc_y)
     outputgrid.write("CELLSIZE %.8f\n" % cell_size_x)
-    outputgrid.write("NODATA_VALUE %f\n" % esri_nullvalue)
+    outputgrid.write("NODATA_VALUE %.8f\n" % esri_nullvalue)
 
     esrigrid_outvalues = np.where(np.isnan(arr), esri_nullvalue, arr)
 
@@ -245,7 +252,7 @@ def try_write_esrigrid(geoarray: GeoArray, outgrid_fn: str, esri_nullvalue: Numb
 
     outputgrid.close()
 
-    return True, "Data saved in {}".format(outgrid_fn)
+    return True, "Data saved in {}".format(outgrid_flpth)
 
 
 
