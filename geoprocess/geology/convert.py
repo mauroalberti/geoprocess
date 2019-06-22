@@ -22,6 +22,10 @@ def extract_georeferenced_attitudes(geodataframe: GeoDataFrame, dip_dir_fldnm: s
     """
 
     crs = geodataframe.crs['init']
+    if crs.startswith("epsg"):
+        epsg_cd = int(crs.split(":")[-1])
+    else:
+        epsg_cd = -1
 
     attitudes = []
 
@@ -30,7 +34,7 @@ def extract_georeferenced_attitudes(geodataframe: GeoDataFrame, dip_dir_fldnm: s
         pt = row['geometry']
         x, y = pt.x, pt.y
         dip_dir, dip_ang = row[dip_dir_fldnm], row[dip_ang_fldnm]
-        attitudes.append((Point(x, y, crs=crs), Plane(dip_dir, dip_ang)))
+        attitudes.append((Point(x, y, epsg_cd=epsg_cd), Plane(dip_dir, dip_ang)))
 
     return attitudes
 

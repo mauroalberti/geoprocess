@@ -71,7 +71,11 @@ def read_linestring_geometries(line_shp_path: str) -> Optional[MultiLine]:
 
     # get projection
 
-    crs = layer.GetSpatialRef().ExportToPrettyWkt()
+    srs = layer.GetSpatialRef()
+    srs.AutoIdentifyEPSG()
+    authority = srs.GetAuthorityName(None)
+    assert authority == "EPSG"
+    epsg_cd = int(srs.GetAuthorityCode(None))
 
     # initialize list storing vertex coordinates of lines
 
@@ -96,13 +100,13 @@ def read_linestring_geometries(line_shp_path: str) -> Optional[MultiLine]:
             datasource.Destroy()
             return None
 
-        line = Line(crs=crs)
+        line = Line(epsg_cd=epsg_cd)
 
         for i in range(geometry.GetPointCount()):
 
             x, y, z = geometry.GetX(i), geometry.GetY(i), geometry.GetZ(i)
 
-            line.add_pt(Point(x, y, z, crs=crs))
+            line.add_pt(Point(x, y, z, epsg_cd=epsg_cd))
 
         feature.Destroy()
 
@@ -114,7 +118,7 @@ def read_linestring_geometries(line_shp_path: str) -> Optional[MultiLine]:
 
     multiline = MultiLine(
         lines=lines,
-        crs=crs
+        epsg_cd=epsg_cd
     )
 
     return multiline

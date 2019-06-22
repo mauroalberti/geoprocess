@@ -7,10 +7,9 @@ import numpy as np
 import itertools
 
 from pygsf.spatial.vectorial.geometries import *
-from pygsf.geodesy.geodetic import *
+from pygsf.projections.geodetic import *
 from pygsf.spatial.vectorial.geometries import Point, Segment, ParamLine3D
 from pygsf.orientations.orientations import Axis
-from pygsf.geodesy.geodetic import epsg_4326_str
 
 
 def profile_parameters(profile: Line) -> Tuple[List[float], List[float], List[float]]:
@@ -25,7 +24,7 @@ def profile_parameters(profile: Line) -> Tuple[List[float], List[float], List[fl
 
     # calculate 3D distances between consecutive points
 
-    if profile.crs() == epsg_4326_str:
+    if profile.epsg() == 4326:
 
         # convert original values into ECEF values (x, y, z, time in ECEF global coordinate system)
         ecef_ln = profile.wgs842ecef()
@@ -801,7 +800,7 @@ def calculate_axis_intersection(map_axis, section_cartes_plane, structural_pt):
     return axis_param_line.intersect_cartes_plane(section_cartes_plane)
 
 
-def map_measure_to_section(structural_rec, section_data, map_axis=None):
+def map_measure_to_section(structural_pt: Point, structural_plane: PlaneAttitude, section_data, map_axis=None):
     """
 
     :param structural_rec:
