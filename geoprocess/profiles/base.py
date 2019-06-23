@@ -1,6 +1,6 @@
 from typing import List, Tuple, Optional, Dict
 
-from math import sin, asin, cos, pi, radians, sqrt
+from math import sin, asin, cos, pi, radians, sqrt, isfinite
 
 import numpy as np
 
@@ -8,8 +8,8 @@ import itertools
 
 from pygsf.spatial.vectorial.geometries import *
 from pygsf.projections.geodetic import *
-from pygsf.spatial.vectorial.geometries import Point, Segment, ParamLine3D
-from pygsf.orientations.orientations import Axis
+from pygsf.geology.orientations import *
+from pygsf.intersections.plane_dem import vertical_profile
 
 
 def profile_parameters(profile: Line) -> Tuple[List[float], List[float], List[float]]:
@@ -162,31 +162,189 @@ class GeoProfilesSet(object):
         _ = self._geoprofiles.pop(ndx)
 
 
-class TopoProfile(object):
+class LinearProfile(object):
     """
-    Class storing a topographic profile element.
+    Class storing a segment profile.
+    It develops along a vertical plane
+    It assumes a Cartesian x-y-z frame.
     """
 
-    def __init__(
-            self,
-            line: Line,
-            inverted: bool = False):
+    def __init__(self, start_pt: Point, end_pt: Point, densify_distance: float):
+        """
+        Instantiates a 2D linear profile object.
+        It is represented by two 2D points and by a densify distance.
+
+        :param start_pt: the profile start point.
+        :type start_pt: Point.
+        :param end_pt: the profile end point.
+        :type end_pt: Point.
+        :param densify_distance: the distance with which to densify the segment profile.
+        :type densify_distance: float or integer.
+        """
+
+        if not isinstance(start_pt, Point):
+            raise Exception("Input start point must be a Point instance")
+
+        if not isinstance(end_pt, Point):
+            raise Exception("Input end point must be a Point instance")
+
+        if start_pt.crs() != end_pt.crs():
+            raise Exception("Both points must have same CRS")
+
+        if start_pt.dist2DWith(end_pt) == 0.0:
+            raise Exception("Input segment length cannot be zero")
+
+        if not isinstance((densify_distance, [float, int])):
+            raise Exception("Input densify distance must be float or integer")
+
+        if not isfinite(densify_distance):
+            raise Exception("Input densify distance must be finite")
+
+        if densify_distance <= 0.0:
+            raise Exception("Input densify distance must be positive")
+
+        epsg_cd = start_pt.epsg()
+
+        self._start_pt = Point(x=start_pt.x, y=start_pt.y, epsg_cd=epsg_cd)
+        self._end_pt = Point(x=end_pt.x, y=end_pt.y, epsg_cd=epsg_cd)
+        self._crs = Crs(epsg_cd)
+        self._densify_dist = densify_distance
+
+    def start_pt(self) -> Point:
+        """
+        Returns a copy of the segment start 2D point.
+
+        :return: start point copy.
+        :rtype: Point.
+        """
+
+        return self._start_pt.clone()
+
+    def end_pt(self) -> Point:
+        """
+        Returns a copy of the segment end 2D point.
+
+        :return: end point copy.
+        :rtype: Point.
+        """
+
+        return self._end_pt.clone()
+
+    def crs(self) -> Crs:
+        """
+        Returns the CRS of the profile.
+
+        :return: the CRS of the profile.
+        :rtype: Crs.
+        """
+
+        return Crs(self._crs.epsg())
+
+    def epsg(self) -> float:
+        """
+        Returns the EPSG code of the profile.
+
+        :return: the EPSG code of the profile.
+        :rtype: float.
+        """
+
+        return self.crs().epsg()
+
+    def segment(self) -> Segment:
+        """
+        Returns the horizontal segment representing the profile.
+
+        :return: segment representing the profile.
+        :rtype: Segment.
+        """
+
+        return Segment(start_pt = self._start_pt, end_pt = self._end_pt)
+
+    def densified_points(self) -> List[Point]:
+        """
+        Returns the list of densified 2D points.
+
+        :return: list of densified points.
+        :rtype: List[Point].
+        """
+
+        return self.segment().densify2d_asPts(densify_distance=self._densify_dist)
+
+    def vertical_plane(self) -> CPlane:
+        """
+        Returns the vertical plane of the segment, as a Cartesian plane.
+
+        :return: the vertical plane of the segment, as a Cartesian plane.
+        :rtype: CPlane.
+        """
+
+        return self.segment().vertical_plane()
+
+    def grid_profile(self, grid: GeoArray) -> Optional[List[float]]:
+        """
+
+        :param dem:
+        :return:
+        """
+
+        if self.crs() != grid.crs():
+            return None
+
+        return [grid.interpolate_bilinear(pt_2d.x, pt_2d.y) for pt_2d in self.densified_points()]
+
+
+class TopoProfile(object):
+    """
+    Class storing a vertical topographic profile element.
+    """
+
+    def __init__(self, line: Line):
         """
         Instantiates a topographic profile object.
 
         :param line: the topographic profile line instance.
         :type line: Line.
-        :param inverted: whether the profile is inverted.
-        :type inverted: bool.
         """
 
-        if line is None:
-            raise Exception("Line must not be None")
+        if not isinstance(line, Line):
+            raise Exception("Input must be a Line instance")
 
-        self.line = line
-        self.inverted = inverted
+        if line.length_2d() == 0.0:
+            raise Exception("Input line length is zero")
 
-        self.horiz_dist_values, self.dist_3d_values, self.dir_slopes_rads = profile_parameters(self.line)
+        self._line = line
+
+        self.horiz_dist_values, self.dist_3d_values, self.dir_slopes_rads = profile_parameters(self._line)
+
+    def line(self) -> Line:
+        """
+        Returns the topographic profile line.
+
+        :return: the line of the profile.
+        :rtype: Line
+        """
+
+        return self._line
+
+    def start_pt(self) -> Optional[Point]:
+        """
+        Returns the first point of a profile.
+
+        :return: the profile first point.
+        :rtype: Optional[Point].
+        """
+
+        return self._line.start_pt()
+
+    def end_pt(self) -> Optional[Point]:
+        """
+        Returns the last point of a profile.
+
+        :return: the profile last point.
+        :rtype: Optional[Point].
+        """
+
+        return self._line.end_pt()
 
     def profile_s(self) -> List[float]:
         """
@@ -206,7 +364,7 @@ class TopoProfile(object):
         :rtype: float.
         """
 
-        return self.line.length_2d()
+        return self._line.length_2d()
 
     def profile_length_3d(self) -> float:
         """
@@ -216,7 +374,7 @@ class TopoProfile(object):
         :rtype: float.
         """
 
-        return self.line.length_3d()
+        return self._line.length_3d()
 
     def elevations(self) -> List[float]:
         """
@@ -226,7 +384,7 @@ class TopoProfile(object):
         :rtype: list of floats.
         """
 
-        return self.line.z_list()
+        return self._line.z_list()
 
     def elev_stats(self) -> Dict:
         """
@@ -236,7 +394,7 @@ class TopoProfile(object):
         :rtype: Dict.
         """
 
-        return self.line.z_stats()
+        return self._line.z_stats()
 
     def slopes(self) -> List[Optional[float]]:
         """
@@ -246,7 +404,7 @@ class TopoProfile(object):
         :rtype: list of slope values.
         """
 
-        return self.line.slopes()
+        return self._line.slopes()
 
     def abs_slopes(self) -> List[Optional[float]]:
         """
@@ -256,7 +414,7 @@ class TopoProfile(object):
         :rtype: list of slope values.
         """
 
-        return self.line.abs_slopes()
+        return self._line.abs_slopes()
 
     def slopes_stats(self) -> Dict:
         """
@@ -266,7 +424,7 @@ class TopoProfile(object):
         :rtype: Dict.
         """
 
-        return self.line.slopes_stats()
+        return self._line.slopes_stats()
 
     def absslopes_stats(self) -> Dict:
         """
@@ -276,7 +434,7 @@ class TopoProfile(object):
         :rtype: Dict.
         """
 
-        return self.line.abs_slopes_stats()
+        return self._line.abs_slopes_stats()
 
 
 class GeoProfile(object):
@@ -800,7 +958,7 @@ def calculate_axis_intersection(map_axis, section_cartes_plane, structural_pt):
     return axis_param_line.intersect_cartes_plane(section_cartes_plane)
 
 
-def map_measure_to_section(structural_pt: Point, structural_plane: PlaneAttitude, section_data, map_axis=None):
+def map_measure_to_section(geological_pt: Point, geological_plane: Plane, topo_profile: TopoProfile, map_axis=None):
     """
 
     :param structural_rec:
@@ -811,29 +969,29 @@ def map_measure_to_section(structural_pt: Point, structural_plane: PlaneAttitude
 
     # extract source data
 
-    structural_pt, structural_plane, structural_pt_id = structural_rec
-    section_init_pt, section_cartes_plane, section_vector = section_data['init_pt'], section_data['cartes_plane'], \
+    section_init_pt = topo_profile.start_pt()\
+    section_cartes_plane, section_vector = section_data['init_pt'], section_data['cartes_plane'], \
                                                             section_data['vector']
 
     # transform geological plane attitude into Cartesian plane
 
-    structural_cartes_plane = structural_plane.plane(structural_pt)
+    geological_cplane = geological_plane.toCPlane(geological_pt)
 
     # intersection versor
 
-    intersection_versor_3d = calculate_intersection_versor(section_cartes_plane, structural_cartes_plane)
+    intersection_versor = calculate_intersection_versor(section_cartes_plane, geological_cplane)
 
     # calculate slope of geological plane onto section plane
 
-    slope_radians, intersection_downward_sense = get_intersection_slope(intersection_versor_3d, section_vector)
+    slope_radians, intersection_downward_sense = get_intersection_slope(intersection_versor, section_vector)
 
     # intersection point
 
     if map_axis is None:
-        intersection_point_3d = calculate_nearest_intersection(intersection_versor_3d, section_cartes_plane,
-                                                               structural_cartes_plane, structural_pt)
+        intersection_point_3d = calculate_nearest_intersection(intersection_versor, section_cartes_plane,
+                                                               geological_cplane, geological_pt)
     else:
-        intersection_point_3d = calculate_axis_intersection(map_axis, section_cartes_plane, structural_pt)
+        intersection_point_3d = calculate_axis_intersection(map_axis, section_cartes_plane, geological_pt)
 
     # horizontal spat_distance between projected structural point and profile start
 
@@ -844,8 +1002,8 @@ def map_measure_to_section(structural_pt: Point, structural_plane: PlaneAttitude
 
     return PlaneAttitude(
         structural_pt_id,
-        structural_pt,
-        structural_plane,
+        geological_pt,
+        geological_plane,
         intersection_point_3d,
         slope_radians,
         intersection_downward_sense,
