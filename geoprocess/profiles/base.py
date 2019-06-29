@@ -7,9 +7,9 @@ import numpy as np
 import itertools
 
 from pygsf.spatial.vectorial.geometries import *
-from pygsf.projections.geodetic import *
+from pygsf.spatial.rasters.geoarray import GeoArray
+from pygsf.spatial.projections.geodetic import *
 from pygsf.geology.orientations import *
-from pygsf.intersections.plane_dem import vertical_profile
 
 
 def profile_parameters(profile: Line) -> Tuple[List[float], List[float], List[float]]:
@@ -969,7 +969,9 @@ def map_measure_to_section(geological_pt: Point, geological_plane: Plane, topo_p
 
     # extract source data
 
-    section_init_pt = topo_profile.start_pt()\
+    section_init_pt = topo_profile.start_pt()
+
+    """
     section_cartes_plane, section_vector = section_data['init_pt'], section_data['cartes_plane'], \
                                                             section_data['vector']
 
@@ -1009,6 +1011,7 @@ def map_measure_to_section(geological_pt: Point, geological_plane: Plane, topo_p
         intersection_downward_sense,
         signed_distance_from_section_start
     )
+    """
 
 
 def map_struct_pts_on_section(structural_data, section_data, mapping_method):
