@@ -10,11 +10,12 @@ import numpy as np
 
 import gdal
 
-from pygsf.defaults.types import *
-from pygsf.defaults.constants import *
+from pygsf.defaults.types import Number
 from pygsf.mathematics.scalars import areClose
 from pygsf.spatial.rasters.geoarray import GeoArray
 from pygsf.spatial.rasters.geotransform import GeoTransform
+
+from .defaults import GRID_NULL_VALUE
 
 
 class RasterIOException(Exception):
@@ -58,7 +59,7 @@ def read_raster(file_ref: Any) -> Tuple[gdal.Dataset, Optional[GeoTransform], in
     return dataset, geotransform, num_bands, projection
 
 
-def read_band(dataset: gdal.Dataset, bnd_ndx: int=1) -> Tuple[dict, 'np.array']:
+def read_band(dataset: gdal.Dataset, bnd_ndx: int = 1) -> Tuple[dict, 'np.array']:
     """
     Read data and metadata of a rasters band based on GDAL.
 
@@ -145,12 +146,16 @@ def try_read_raster_band(raster_source: str, bnd_ndx: int=1) -> Tuple[bool, Unio
     return True, (geotransform, projection, band_params, data)
 
 
-def read_raster_band(raster_source: str, bnd_ndx: int = 1) -> Optional[GeoArray]:
+def read_raster_band(raster_source: str, bnd_ndx: int = 1, epsg_cd: int = -1) -> Optional[GeoArray]:
     """
     Read parameters and values of a raster band.
+    Since it is not immediate to get the EPSG code of the input raster,
+    the user is advised to provide it directly in the function call.
+
 
     :param raster_source: the raster path.
     :param bnd_ndx: the optional band index.
+    :param epsg_cd: the EPSG code of the raster.
     :return: the band as a geoarray.
     :rtype: Optional GeoArray.
     """
@@ -161,7 +166,7 @@ def read_raster_band(raster_source: str, bnd_ndx: int = 1) -> Optional[GeoArray]
         band_params, data = read_band(dataset, bnd_ndx)
         ga = GeoArray(
             inGeotransform=geotransform,
-            inProjection=projection,
+            epsg_cd=epsg_cd,
             inLevels=[data]
         )
 
@@ -170,13 +175,6 @@ def read_raster_band(raster_source: str, bnd_ndx: int = 1) -> Optional[GeoArray]
     except:
 
         return None
-
-
-if __name__ == "__main__":
-
-    import doctest
-    doctest.testmod()
-
 
 
 def try_write_esrigrid(geoarray: GeoArray, outgrid_flpth: str, esri_nullvalue: Number=GRID_NULL_VALUE, level_ndx: int=0) -> Tuple[bool, str]:
@@ -255,4 +253,8 @@ def try_write_esrigrid(geoarray: GeoArray, outgrid_flpth: str, esri_nullvalue: N
     return True, "Data saved in {}".format(outgrid_flpth)
 
 
+if __name__ == "__main__":
+
+    import doctest
+    doctest.testmod()
 
