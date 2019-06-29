@@ -4,7 +4,7 @@ from typing import List, Tuple
 from geopandas import GeoDataFrame
 
 from pygsf.spatial.vectorial.geometries import Point
-from pygsf.orientations.orientations import Plane
+from pygsf.geology.orientations import Plane
 
 
 def extract_georeferenced_attitudes(geodataframe: GeoDataFrame, dip_dir_fldnm: str, dip_ang_fldnm: str) -> List[Tuple[Point, Plane]]:
