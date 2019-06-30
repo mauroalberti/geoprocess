@@ -165,8 +165,7 @@ class GeoProfilesSet(object):
 class LinearProfile(object):
     """
     Class storing a segment profile.
-    It develops along a vertical plane
-    It assumes a Cartesian x-y-z frame.
+    It is contained within a vertical plane, assuming a Cartesian x-y-z frame.
     """
 
     def __init__(self, start_pt: Point, end_pt: Point, densify_distance: float):
@@ -194,7 +193,7 @@ class LinearProfile(object):
         if start_pt.dist2DWith(end_pt) == 0.0:
             raise Exception("Input segment length cannot be zero")
 
-        if not isinstance((densify_distance, [float, int])):
+        if not isinstance(densify_distance, (float, int)):
             raise Exception("Input densify distance must be float or integer")
 
         if not isfinite(densify_distance):
@@ -258,7 +257,27 @@ class LinearProfile(object):
         :rtype: Segment.
         """
 
-        return Segment(start_pt = self._start_pt, end_pt = self._end_pt)
+        return Segment(start_pt=self._start_pt, end_pt=self._end_pt)
+
+    def densified_steps(self) -> List[float]:
+        """
+        Returns a list of the incremental steps (2D distances) along the profile.
+
+        :return: the list of incremental steps.
+        :rtype: List[float].
+        """
+
+        return self.segment().densify2d_asSteps(self._densify_dist)
+
+    def num_pts(self) -> int:
+        """
+        Returns the number of steps making up the profile.
+
+        :return: number of steps making up the profile.
+        :rtype: int.
+        """
+
+        return len(self.densified_points())
 
     def densified_points(self) -> List[Point]:
         """
@@ -280,7 +299,7 @@ class LinearProfile(object):
 
         return self.segment().vertical_plane()
 
-    def grid_profile(self, grid: GeoArray) -> Optional[List[float]]:
+    def get_z_values(self, grid: GeoArray) -> Optional[List[float]]:
         """
 
         :param dem:
