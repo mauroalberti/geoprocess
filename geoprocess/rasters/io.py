@@ -114,7 +114,7 @@ def read_band(dataset: gdal.Dataset, bnd_ndx: int = 1) -> Tuple[dict, 'np.array'
     # if nodatavalue exists, set null values to NaN in numpy array
 
     if noDataVal is not None and isfinite(noDataVal):
-        grid_values = np.where(abs(grid_values - noDataVal) > 1e-10, grid_values, np.NaN)
+        grid_values = np.where(np.isclose(grid_values, noDataVal), np.NaN, grid_values)
 
     band_params = dict(
         dataType=data_type,
