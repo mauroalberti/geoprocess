@@ -15,16 +15,55 @@ import numpy as np
 from matplotlib import gridspec
 import matplotlib.pyplot as plt
 
-from .base import TopoProfile
+from pygsf.spatial.rasters.geoarray import GeoArray
+from .base import LinearProfile, TopoProfile
 
-from geoprocess.widgets.qt_tools import qcolor2rgbmpl
-from geoprocess.widgets.mpl_widget import MplWidget, plot_line, plot_filled_line
+from ..widgets.qt_tools import qcolor2rgbmpl
+from ..widgets.mpl_widget import MplWidget, plot_line, plot_filled_line
 
 
 colors_addit = ["darkseagreen", "darkgoldenrod", "darkviolet", "hotpink", "powderblue", "yellowgreen",
                 "palevioletred",
                 "seagreen", "darkturquoise", "beige", "darkkhaki", "red", "yellow", "magenta", "blue", "cyan",
                 "chartreuse"]
+
+
+def plot_profile(profile: LinearProfile, grid: GeoArray, color: str = "blue", aspect: Union[float, int] = 1, width: float = 18.5, height: float = 10.5):
+    """
+
+    :param profile: the linear profile.
+    :type: LinearProfile.
+    :param grid: the grid storing the elevations.
+    :type grid: GeoArray.
+    :param color: color.
+    :type color: str.
+    :param aspect: the profile aspect.
+    :type aspect: float, int.
+    :param width: the width of the produced figure, in inches.
+    :type width: float.
+    :param height: the height of the produced figure, in inches.
+    :type height: float.
+    :return: None.
+    """
+
+    if not isinstance(profile, LinearProfile):
+        return None
+
+    if not isinstance(grid, GeoArray):
+        return None
+
+    x = profile.densified_steps()
+    y = profile.get_z_values(grid)
+
+    if not y:
+        return None
+
+    fig, ax = plt.subplots()
+    fig.set_size_inches(width, height)
+
+    ax.set_aspect(aspect)
+
+    ax.plot(x, y)
 
 
 def plot_topoprofile(topo_profile: TopoProfile, color: str = "blue", aspect: Union[float, int] = 1, width: float = 18.5, height: float = 10.5):
