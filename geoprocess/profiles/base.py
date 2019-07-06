@@ -1,10 +1,10 @@
 from typing import List, Tuple, Optional, Dict
 
 from math import sin, asin, cos, pi, radians, sqrt, isfinite
+from array import array
+import itertools
 
 import numpy as np
-
-import itertools
 
 from pygsf.spatial.vectorial.geometries import *
 from pygsf.spatial.rasters.geoarray import GeoArray
@@ -63,6 +63,230 @@ def profile_parameters(profile: Line) -> Tuple[List[float], List[float], List[fl
         horiz_dist_values.append(dist_3D * cos(slope_rads))
 
     return horiz_dist_values, dist_3d_values, dir_slopes_rads
+
+
+class LinearProfiler(object):
+    """
+    Class storing a segment profile.
+    It is contained within a vertical plane, assuming a Cartesian x-y-z frame.
+    """
+
+    def __init__(self, start_pt: Point, end_pt: Point, densify_distance: float):
+        """
+        Instantiates a 2D linear profile object.
+        It is represented by two 2D points and by a densify distance.
+
+        :param start_pt: the profile start point.
+        :type start_pt: Point.
+        :param end_pt: the profile end point.
+        :type end_pt: Point.
+        :param densify_distance: the distance with which to densify the segment profile.
+        :type densify_distance: float or integer.
+        """
+
+        if not isinstance(start_pt, Point):
+            raise Exception("Input start point must be a Point instance")
+
+        if not isinstance(end_pt, Point):
+            raise Exception("Input end point must be a Point instance")
+
+        if start_pt.crs() != end_pt.crs():
+            raise Exception("Both points must have same CRS")
+
+        if start_pt.dist2DWith(end_pt) == 0.0:
+            raise Exception("Input segment length cannot be zero")
+
+        if not isinstance(densify_distance, (float, int)):
+            raise Exception("Input densify distance must be float or integer")
+
+        if not isfinite(densify_distance):
+            raise Exception("Input densify distance must be finite")
+
+        if densify_distance <= 0.0:
+            raise Exception("Input densify distance must be positive")
+
+        epsg_cd = start_pt.epsg()
+
+        self._start_pt = Point(x=start_pt.x, y=start_pt.y, epsg_cd=epsg_cd)
+        self._end_pt = Point(x=end_pt.x, y=end_pt.y, epsg_cd=epsg_cd)
+        self._crs = Crs(epsg_cd)
+        self._densify_dist = densify_distance
+
+    def start_pt(self) -> Point:
+        """
+        Returns a copy of the segment start 2D point.
+
+        :return: start point copy.
+        :rtype: Point.
+        """
+
+        return self._start_pt.clone()
+
+    def end_pt(self) -> Point:
+        """
+        Returns a copy of the segment end 2D point.
+
+        :return: end point copy.
+        :rtype: Point.
+        """
+
+        return self._end_pt.clone()
+
+    def crs(self) -> Crs:
+        """
+        Returns the CRS of the profile.
+
+        :return: the CRS of the profile.
+        :rtype: Crs.
+        """
+
+        return Crs(self._crs.epsg())
+
+    def epsg(self) -> float:
+        """
+        Returns the EPSG code of the profile.
+
+        :return: the EPSG code of the profile.
+        :rtype: float.
+        """
+
+        return self.crs().epsg()
+
+    def segment(self) -> Segment:
+        """
+        Returns the horizontal segment representing the profile.
+
+        :return: segment representing the profile.
+        :rtype: Segment.
+        """
+
+        return Segment(start_pt=self._start_pt, end_pt=self._end_pt)
+
+    def densified_steps(self) -> array:
+        """
+        Returns an array made up by the incremental steps (2D distances) along the profile.
+
+        :return: the list of incremental steps.
+        :rtype: List[float].
+        """
+
+        return self.segment().densify2d_asSteps(self._densify_dist)
+
+    def num_pts(self) -> int:
+        """
+        Returns the number of steps making up the profile.
+
+        :return: number of steps making up the profile.
+        :rtype: int.
+        """
+
+        return len(self.densified_points())
+
+    def densified_points(self) -> List[Point]:
+        """
+        Returns the list of densified 2D points.
+
+        :return: list of densified points.
+        :rtype: List[Point].
+        """
+
+        return self.segment().densify2d_asPts(densify_distance=self._densify_dist)
+
+    def vertical_plane(self) -> CPlane:
+        """
+        Returns the vertical plane of the segment, as a Cartesian plane.
+
+        :return: the vertical plane of the segment, as a Cartesian plane.
+        :rtype: CPlane.
+        """
+
+        return self.segment().vertical_plane()
+
+    def get_z_values(self, grid: GeoArray) -> Optional[array]:
+        """
+
+        :param dem:
+        :return:
+        """
+
+        if self.crs() != grid.crs():
+            return None
+
+        return array('d', [grid.interpolate_bilinear(pt_2d.x, pt_2d.y) for pt_2d in self.densified_points()])
+
+    def profile_grids(self, *grids: Tuple[GeoArray]) -> Optional[Profiles]:
+        """
+        Create profiles of one or more grids.
+
+        :param grids: a set of grids, one or more.
+        :type grids: tuple of GeoArray instances.
+        :return:
+        :rtype:
+        """
+
+        if not grids:
+            return None
+
+        for grid in grids:
+            if not isinstance(grid, GeoArray):
+                return None
+
+        grid_profiles = Profiles(self.densified_steps())
+
+        for grid in grids:
+
+            grid_profiles.add_zs(self.get_z_values(grid))
+
+        return grid_profiles
+
+
+class Profiles:
+    """
+    Class storing a set (one or more) of profiles.
+
+    """
+
+    def __init__(self, s_array: array, *z_arrays: Tuple[Optional[array]]):
+
+        if not isinstance(s_array, array):
+            raise Exception("s array must be of array type")
+        if s_array.typecode != 'd':
+            raise Exception("s array must be of type double")
+
+        num_steps = len(s_array)
+
+        for z_array in z_arrays:
+            if z_array:
+                if not isinstance(z_array, array):
+                    raise Exception("All z arrays must be an array")
+                if z_array.typecode != 'd':
+                    raise Exception("All z arrays must be of type double")
+                if len(z_array) != num_steps:
+                    raise Exception("All z arrays must have the same length of s array")
+
+        self._num_steps = num_steps
+        self._s = s_array
+        self._zs = list(z_arrays)
+
+    def add_zs(self, z_array: Optional[array]):
+        """
+        Add an array of z values.
+
+        :param z_array: the z array to add.
+        :type z_array: array.
+        :return:
+        """
+
+        if z_array:
+
+            if not isinstance(z_array, array):
+                raise Exception("z array must be an array")
+            if z_array.typecode != 'd':
+                raise Exception("z array must be of type double")
+            if len(z_array) != self._num_steps:
+                raise Exception("z array must have the same length of s array")
+
+        self._zs += z_array
 
 
 class GeoProfilesSet(object):
@@ -162,158 +386,11 @@ class GeoProfilesSet(object):
         _ = self._geoprofiles.pop(ndx)
 
 
-class LinearProfile(object):
-    """
-    Class storing a segment profile.
-    It is contained within a vertical plane, assuming a Cartesian x-y-z frame.
-    """
-
-    def __init__(self, start_pt: Point, end_pt: Point, densify_distance: float):
-        """
-        Instantiates a 2D linear profile object.
-        It is represented by two 2D points and by a densify distance.
-
-        :param start_pt: the profile start point.
-        :type start_pt: Point.
-        :param end_pt: the profile end point.
-        :type end_pt: Point.
-        :param densify_distance: the distance with which to densify the segment profile.
-        :type densify_distance: float or integer.
-        """
-
-        if not isinstance(start_pt, Point):
-            raise Exception("Input start point must be a Point instance")
-
-        if not isinstance(end_pt, Point):
-            raise Exception("Input end point must be a Point instance")
-
-        if start_pt.crs() != end_pt.crs():
-            raise Exception("Both points must have same CRS")
-
-        if start_pt.dist2DWith(end_pt) == 0.0:
-            raise Exception("Input segment length cannot be zero")
-
-        if not isinstance(densify_distance, (float, int)):
-            raise Exception("Input densify distance must be float or integer")
-
-        if not isfinite(densify_distance):
-            raise Exception("Input densify distance must be finite")
-
-        if densify_distance <= 0.0:
-            raise Exception("Input densify distance must be positive")
-
-        epsg_cd = start_pt.epsg()
-
-        self._start_pt = Point(x=start_pt.x, y=start_pt.y, epsg_cd=epsg_cd)
-        self._end_pt = Point(x=end_pt.x, y=end_pt.y, epsg_cd=epsg_cd)
-        self._crs = Crs(epsg_cd)
-        self._densify_dist = densify_distance
-
-    def start_pt(self) -> Point:
-        """
-        Returns a copy of the segment start 2D point.
-
-        :return: start point copy.
-        :rtype: Point.
-        """
-
-        return self._start_pt.clone()
-
-    def end_pt(self) -> Point:
-        """
-        Returns a copy of the segment end 2D point.
-
-        :return: end point copy.
-        :rtype: Point.
-        """
-
-        return self._end_pt.clone()
-
-    def crs(self) -> Crs:
-        """
-        Returns the CRS of the profile.
-
-        :return: the CRS of the profile.
-        :rtype: Crs.
-        """
-
-        return Crs(self._crs.epsg())
-
-    def epsg(self) -> float:
-        """
-        Returns the EPSG code of the profile.
-
-        :return: the EPSG code of the profile.
-        :rtype: float.
-        """
-
-        return self.crs().epsg()
-
-    def segment(self) -> Segment:
-        """
-        Returns the horizontal segment representing the profile.
-
-        :return: segment representing the profile.
-        :rtype: Segment.
-        """
-
-        return Segment(start_pt=self._start_pt, end_pt=self._end_pt)
-
-    def densified_steps(self) -> List[float]:
-        """
-        Returns a list of the incremental steps (2D distances) along the profile.
-
-        :return: the list of incremental steps.
-        :rtype: List[float].
-        """
-
-        return self.segment().densify2d_asSteps(self._densify_dist)
-
-    def num_pts(self) -> int:
-        """
-        Returns the number of steps making up the profile.
-
-        :return: number of steps making up the profile.
-        :rtype: int.
-        """
-
-        return len(self.densified_points())
-
-    def densified_points(self) -> List[Point]:
-        """
-        Returns the list of densified 2D points.
-
-        :return: list of densified points.
-        :rtype: List[Point].
-        """
-
-        return self.segment().densify2d_asPts(densify_distance=self._densify_dist)
-
-    def vertical_plane(self) -> CPlane:
-        """
-        Returns the vertical plane of the segment, as a Cartesian plane.
-
-        :return: the vertical plane of the segment, as a Cartesian plane.
-        :rtype: CPlane.
-        """
-
-        return self.segment().vertical_plane()
-
-    def get_z_values(self, grid: GeoArray) -> Optional[List[float]]:
-        """
-
-        :param dem:
-        :return:
-        """
-
-        if self.crs() != grid.crs():
-            return None
-
-        return [grid.interpolate_bilinear(pt_2d.x, pt_2d.y) for pt_2d in self.densified_points()]
-
-
 class TopoProfile(object):
     """
+
+    Deprecated. Use class Profiles.
+
     Class storing a vertical topographic profile element.
     """
 

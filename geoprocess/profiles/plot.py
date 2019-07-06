@@ -16,7 +16,7 @@ from matplotlib import gridspec
 import matplotlib.pyplot as plt
 
 from pygsf.spatial.rasters.geoarray import GeoArray
-from .base import LinearProfile, TopoProfile
+from .base import LinearProfiler, TopoProfile
 
 from ..widgets.qt_tools import qcolor2rgbmpl
 from ..widgets.mpl_widget import MplWidget, plot_line, plot_filled_line
@@ -28,8 +28,10 @@ colors_addit = ["darkseagreen", "darkgoldenrod", "darkviolet", "hotpink", "powde
                 "chartreuse"]
 
 
-def plot_profile(profile: LinearProfile, grid: GeoArray, color: str = "blue", aspect: Union[float, int] = 1, width: float = 18.5, height: float = 10.5):
+def plot_profile(profile: LinearProfiler, grid: GeoArray, color: str = "blue", aspect: Union[float, int] = 1, width: float = 18.5, height: float = 10.5):
     """
+    Deprecated.
+
 
     :param profile: the linear profile.
     :type: LinearProfile.
@@ -46,7 +48,7 @@ def plot_profile(profile: LinearProfile, grid: GeoArray, color: str = "blue", as
     :return: None.
     """
 
-    if not isinstance(profile, LinearProfile):
+    if not isinstance(profile, LinearProfiler):
         return None
 
     if not isinstance(grid, GeoArray):
