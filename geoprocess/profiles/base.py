@@ -65,9 +65,116 @@ def profile_parameters(profile: Line) -> Tuple[List[float], List[float], List[fl
     return horiz_dist_values, dist_3d_values, dir_slopes_rads
 
 
-class LinearProfiler(object):
+class ProfPlanarAttitude:
     """
-    Class storing a segment profile.
+    Represent geological attitude along a profile.
+    """
+
+    def __init__(self, slope_degr: float, dwnwrd_sense, sign_hor_dist):
+        """
+
+        :param slope_degr: the slope of the attitude in the profile, Unit is degrees.
+        :param dwnwrd_sense:
+        :param sign_hor_dist:
+        """
+
+        self.slope_degr = slope_degr
+        self.dwnwrd_sense = dwnwrd_sense
+        self.sign_hor_dist = sign_hor_dist
+
+
+class ScalarProfiles:
+    """
+    Class storing a set (one or more) of scalar profiles.
+
+    """
+
+    def __init__(self, s_array: array, *z_arrays: Tuple[Optional[array]]):
+
+        if not isinstance(s_array, array):
+            raise Exception("s array must be of array type")
+        if s_array.typecode != 'd':
+            raise Exception("s array must be of type double")
+
+        num_steps = len(s_array)
+
+        for z_array in z_arrays:
+            if z_array:
+                if not isinstance(z_array, array):
+                    raise Exception("All z arrays must be an array")
+                if z_array.typecode != 'd':
+                    raise Exception("All z arrays must be of type double")
+                if len(z_array) != num_steps:
+                    raise Exception("All z arrays must have the same length of s array")
+
+        self._num_steps = num_steps
+        self._s = s_array
+        self._zs = [z_array for z_array in z_arrays]
+
+    def add_zs(self, z_array: Optional[array]):
+        """
+        Add an array of z values.
+
+        :param z_array: the z array to add.
+        :type z_array: array.
+        :return: None
+        """
+
+        if z_array:
+
+            if not isinstance(z_array, array):
+                raise Exception("z array must be an array")
+            if z_array.typecode != 'd':
+                raise Exception("z array must be of type double")
+            if len(z_array) != self._num_steps:
+                raise Exception("z array must have the same length of s array")
+
+        self._zs.append(z_array)
+
+    def s(self) -> array:
+        """
+        Return the s array.
+
+        :return: the s array.
+        :rtype: array.
+        """
+
+        return self._s
+
+    def zs(self) -> List[Optional[array]]:
+        """
+        Return the list of optional z arrays.
+
+        :return: the z arrays
+        :rtype: List[Optional[array]].
+        """
+
+        return self._zs
+
+    def num_steps(self) -> int:
+        """
+        Return the number of steps of the profiles.
+
+        :return: number of steps of the profiles.
+        :rtype: int.
+        """
+
+        return self._num_steps
+
+    def num_profiles(self) -> int:
+        """
+        Return the number of available profiles.
+
+        :return: number of available profiles.
+        :rtype: int.
+        """
+
+        return len(self._zs)
+
+
+class LineProfiler:
+    """
+    Class storing a linear (straight) profile.
     It is contained within a vertical plane, assuming a Cartesian x-y-z frame.
     """
 
@@ -166,8 +273,8 @@ class LinearProfiler(object):
         """
         Returns an array made up by the incremental steps (2D distances) along the profile.
 
-        :return: the list of incremental steps.
-        :rtype: List[float].
+        :return: array storing incremental steps values.
+        :rtype: array.
         """
 
         return self.segment().densify2d_asSteps(self._densify_dist)
@@ -202,19 +309,26 @@ class LinearProfiler(object):
 
         return self.segment().vertical_plane()
 
-    def get_z_values(self, grid: GeoArray) -> Optional[array]:
+    def get_z_values(self, grid: GeoArray) -> array:
+        """
+        Sample grid values along the profiler points.
+
+        :param grid: the input grid
+        :type grid: GeoArray.
+        :return: array storing the z values sampled from the grid,
+        :rtype: array.
+        :raise: Exception
         """
 
-        :param dem:
-        :return:
-        """
+        if not isinstance(grid, GeoArray):
+            raise Exception("Input grid must be a GeoArray but is {}".format(type(grid)))
 
         if self.crs() != grid.crs():
-            return None
+            raise Exception("Input grid EPSG code must be {} but is {}".format(self.epsg(), grid.epsg()))
 
         return array('d', [grid.interpolate_bilinear(pt_2d.x, pt_2d.y) for pt_2d in self.densified_points()])
 
-    def profile_grids(self, *grids: Tuple[GeoArray]) -> Optional[Profiles]:
+    def profile_grids(self, *grids: Tuple[GeoArray]) -> Optional[ScalarProfiles]:
         """
         Create profiles of one or more grids.
 
@@ -224,172 +338,25 @@ class LinearProfiler(object):
         :rtype:
         """
 
-        if not grids:
-            return None
-
         for grid in grids:
             if not isinstance(grid, GeoArray):
                 return None
 
-        grid_profiles = Profiles(self.densified_steps())
+        grid_profiles = ScalarProfiles(
+            s_array=self.densified_steps())
 
         for grid in grids:
 
-            grid_profiles.add_zs(self.get_z_values(grid))
+            grid_profiles.add_zs(
+                z_array=self.get_z_values(grid))
 
         return grid_profiles
 
 
-class Profiles:
-    """
-    Class storing a set (one or more) of profiles.
-
+class TopoProfile:
     """
 
-    def __init__(self, s_array: array, *z_arrays: Tuple[Optional[array]]):
-
-        if not isinstance(s_array, array):
-            raise Exception("s array must be of array type")
-        if s_array.typecode != 'd':
-            raise Exception("s array must be of type double")
-
-        num_steps = len(s_array)
-
-        for z_array in z_arrays:
-            if z_array:
-                if not isinstance(z_array, array):
-                    raise Exception("All z arrays must be an array")
-                if z_array.typecode != 'd':
-                    raise Exception("All z arrays must be of type double")
-                if len(z_array) != num_steps:
-                    raise Exception("All z arrays must have the same length of s array")
-
-        self._num_steps = num_steps
-        self._s = s_array
-        self._zs = list(z_arrays)
-
-    def add_zs(self, z_array: Optional[array]):
-        """
-        Add an array of z values.
-
-        :param z_array: the z array to add.
-        :type z_array: array.
-        :return:
-        """
-
-        if z_array:
-
-            if not isinstance(z_array, array):
-                raise Exception("z array must be an array")
-            if z_array.typecode != 'd':
-                raise Exception("z array must be of type double")
-            if len(z_array) != self._num_steps:
-                raise Exception("z array must have the same length of s array")
-
-        self._zs += z_array
-
-
-class GeoProfilesSet(object):
-    """
-    Represents a set of Geoprofile elements,
-    stored as a list
-    """
-
-    def __init__(self):
-
-        self._geoprofiles = []  # a list of GeoProfile instances
-
-    @property
-    def geoprofiles(self):
-        """
-
-        :return:
-        """
-
-        return self._geoprofiles
-
-    @property
-    def geoprofiles_num(self) -> int:
-        """
-        Returns the number of geoprofiles.
-
-        :return: number of geoprofiles.
-        :rtype: int.
-        """
-
-        return len(self.geoprofiles)
-
-    def geoprofile(self, ndx):
-        """
-
-        :param ndx:
-        :return:
-        """
-
-        return self._geoprofiles[ndx]
-
-    def append(self, geoprofile):
-        """
-
-        :param geoprofile:
-        :return:
-        """
-
-        self._geoprofiles.append(geoprofile)
-
-    def insert(self, ndx, geoprofile):
-        """
-
-        :param ndx:
-        :param geoprofile:
-        :return:
-        """
-
-        self._geoprofiles.insert(ndx, geoprofile)
-
-    def move(self, ndx_init, ndx_final):
-        """
-
-        :param ndx_init:
-        :param ndx_final:
-        :return:
-        """
-
-        geoprofile = self._geoprofiles.pop(ndx_init)
-        self.insert(ndx_final, geoprofile)
-
-    def move_up(self, ndx):
-        """
-
-        :param ndx:
-        :return:
-        """
-
-        self.move(ndx, ndx -1)
-
-    def move_down(self, ndx):
-        """
-
-        :param ndx:
-        :return:
-        """
-
-        self.move(ndx, ndx + 1)
-
-    def remove(self, ndx):
-        """
-
-        :param ndx:
-        :return:
-        """
-
-        _ = self._geoprofiles.pop(ndx)
-
-
-class TopoProfile(object):
-    """
-
-    Deprecated. Use class Profiles.
+    Deprecated. Use class ScalarProfiles.
 
     Class storing a vertical topographic profile element.
     """
@@ -533,7 +500,7 @@ class TopoProfile(object):
         return self._line.abs_slopes_stats()
 
 
-class GeoProfile(object):
+class GeoProfile:
     """
     Class representing the topographic and geological elements
     embodying a single geological profile.
@@ -870,7 +837,108 @@ class GeoProfile(object):
         self.geosurfaces_ids.append(lIds)
 
 
-class PlaneAttitude(object):
+class GeoProfilesSet:
+    """
+    Represents a set of Geoprofile elements,
+    stored as a list
+    """
+
+    def __init__(self):
+
+        self._geoprofiles = []  # a list of GeoProfile instances
+
+    @property
+    def geoprofiles(self):
+        """
+
+        :return:
+        """
+
+        return self._geoprofiles
+
+    @property
+    def geoprofiles_num(self) -> int:
+        """
+        Returns the number of geoprofiles.
+
+        :return: number of geoprofiles.
+        :rtype: int.
+        """
+
+        return len(self.geoprofiles)
+
+    def geoprofile(self, ndx):
+        """
+
+        :param ndx:
+        :return:
+        """
+
+        return self._geoprofiles[ndx]
+
+    def append(self, geoprofile):
+        """
+
+        :param geoprofile:
+        :return:
+        """
+
+        self._geoprofiles.append(geoprofile)
+
+    def insert(self, ndx, geoprofile):
+        """
+
+        :param ndx:
+        :param geoprofile:
+        :return:
+        """
+
+        self._geoprofiles.insert(ndx, geoprofile)
+
+    def move(self, ndx_init, ndx_final):
+        """
+
+        :param ndx_init:
+        :param ndx_final:
+        :return:
+        """
+
+        geoprofile = self._geoprofiles.pop(ndx_init)
+        self.insert(ndx_final, geoprofile)
+
+    def move_up(self, ndx):
+        """
+
+        :param ndx:
+        :return:
+        """
+
+        self.move(ndx, ndx -1)
+
+    def move_down(self, ndx):
+        """
+
+        :param ndx:
+        :return:
+        """
+
+        self.move(ndx, ndx + 1)
+
+    def remove(self, ndx):
+        """
+
+        :param ndx:
+        :return:
+        """
+
+        _ = self._geoprofiles.pop(ndx)
+
+
+class PlaneAttitude:
+    """
+    Deprecated. Use "PlanarAttitude".
+
+    """
 
     def __init__(self, rec_id, source_point_3d, source_geol_plane, point_3d, slope_rad, dwnwrd_sense, sign_hor_dist):
         """

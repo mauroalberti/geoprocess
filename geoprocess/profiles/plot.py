@@ -16,7 +16,7 @@ from matplotlib import gridspec
 import matplotlib.pyplot as plt
 
 from pygsf.spatial.rasters.geoarray import GeoArray
-from .base import LinearProfiler, TopoProfile
+from .base import LineProfiler, ScalarProfiles, TopoProfile
 
 from ..widgets.qt_tools import qcolor2rgbmpl
 from ..widgets.mpl_widget import MplWidget, plot_line, plot_filled_line
@@ -28,9 +28,36 @@ colors_addit = ["darkseagreen", "darkgoldenrod", "darkviolet", "hotpink", "powde
                 "chartreuse"]
 
 
-def plot_profile(profile: LinearProfiler, grid: GeoArray, color: str = "blue", aspect: Union[float, int] = 1, width: float = 18.5, height: float = 10.5):
+def plot_profiles(profiles: ScalarProfiles, aspect: Union[float, int] = 1, width: Union[float, int] = 18.5, height: Union[float, int] = 10.5):
     """
-    Deprecated.
+    Optionally plot a set of profiles with Matplotlib.
+
+    :param profiles: the profiles to plot.
+    :type profiles: ScalarProfiles
+    :param aspect: the plot aspect.
+    :type aspect: Union[float, int].
+    :param width: the plot width, in inches. # TOCHECK IF ALWAYS INCHES
+    :type width: Union[float, int].
+    :param height: the plot height in inches.  # TOCHECK IF ALWAYS INCHES
+    :type height: Union[float, int].
+    :return: None
+    """
+
+    fig, ax = plt.subplots()
+    fig.set_size_inches(width, height)
+
+    ax.set_aspect(aspect)
+
+    s = profiles.s()
+
+    for z in profiles.zs():
+        if z:
+            ax.plot(s, z)
+
+
+def plot_profile(profile: LineProfiler, grid: GeoArray, color: str = "blue", aspect: Union[float, int] = 1, width: float = 18.5, height: float = 10.5):
+    """
+    Deprecated. Use 'plot_profiles'.
 
 
     :param profile: the linear profile.
@@ -48,7 +75,7 @@ def plot_profile(profile: LinearProfiler, grid: GeoArray, color: str = "blue", a
     :return: None.
     """
 
-    if not isinstance(profile, LinearProfiler):
+    if not isinstance(profile, LineProfiler):
         return None
 
     if not isinstance(grid, GeoArray):
@@ -156,6 +183,7 @@ def plot_structural_attitude(plot_addit_params, axes, section_length, vertical_e
     axes.plot(projected_s, projected_z, 'o', color=color)
 
     # plot segments representing structural data
+
     for structural_attitude in structural_attitude_list:
         if 0.0 <= structural_attitude.sign_hor_dist <= section_length:
             structural_segment_s, structural_segment_z = define_plot_structural_segment(structural_attitude,
