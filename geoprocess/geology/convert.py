@@ -7,7 +7,10 @@ from pygsf.spatial.vectorial.geometries import Point
 from pygsf.geology.orientations import Plane
 
 
-def extract_georeferenced_attitudes(geodataframe: GeoDataFrame, dip_dir_fldnm: str, dip_ang_fldnm: str) -> List[Tuple[Point, Plane]]:
+def extract_georeferenced_attitudes(
+        geodataframe: GeoDataFrame,
+        dip_dir_fldnm: str,
+        dip_ang_fldnm: str) -> List[Tuple[Point, Plane]]:
     """
     Extracts the georeferenced attitudes from a geopandas GeoDataFrame instance.
 
