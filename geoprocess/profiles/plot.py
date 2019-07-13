@@ -15,8 +15,11 @@ import numpy as np
 from matplotlib import gridspec
 import matplotlib.pyplot as plt
 
+
 from pygsf.spatial.rasters.geoarray import GeoArray
-from .base import LineProfiler, ScalarProfiles, TopoProfile
+
+
+from .base import LinearProfiler, ScalarProfiles, TopoProfile
 
 from ..widgets.qt_tools import qcolor2rgbmpl
 from ..widgets.mpl_widget import MplWidget, plot_line, plot_filled_line
@@ -54,9 +57,9 @@ def plot_profiles(profiles: ScalarProfiles, aspect: Union[float, int] = 1, width
         if z:
             ax.plot(s, z)
 
-
-def plot_profile(profile: LineProfiler, grid: GeoArray, color: str = "blue", aspect: Union[float, int] = 1, width: float = 18.5, height: float = 10.5):
-    """
+"""
+def plot_profile(profile: LinearProfiler, grid: GeoArray, color: str = "blue", aspect: Union[float, int] = 1, width: float = 18.5, height: float = 10.5):
+    '''
     Deprecated. Use 'plot_profiles'.
 
 
@@ -73,9 +76,9 @@ def plot_profile(profile: LineProfiler, grid: GeoArray, color: str = "blue", asp
     :param height: the height of the produced figure, in inches.
     :type height: float.
     :return: None.
-    """
+    '''
 
-    if not isinstance(profile, LineProfiler):
+    if not isinstance(profile, LinearProfiler):
         return None
 
     if not isinstance(grid, GeoArray):
@@ -93,10 +96,13 @@ def plot_profile(profile: LineProfiler, grid: GeoArray, color: str = "blue", asp
     ax.set_aspect(aspect)
 
     ax.plot(x, y)
+"""
 
-
+"""
 def plot_topoprofile(topo_profile: TopoProfile, color: str = "blue", aspect: Union[float, int] = 1, width: float = 18.5, height: float = 10.5):
-    """
+    '''
+    Deprecated. Use 'plot_profiles'
+    
     Plot a vertical profile given a TopoProfile instance.
 
     :param topo_profile: TopoProfile instance.
@@ -110,7 +116,7 @@ def plot_topoprofile(topo_profile: TopoProfile, color: str = "blue", aspect: Uni
     :param height: the height of the produced figure, in inches.
     :type height: float.
     :return: None.
-    """
+    '''
 
     x = topo_profile.profile_s()
     y = topo_profile.elevations()
@@ -121,19 +127,26 @@ def plot_topoprofile(topo_profile: TopoProfile, color: str = "blue", aspect: Uni
     ax.set_aspect(aspect)
 
     ax.plot(x, y)
+"""
 
 
-def define_plot_structural_segment(structural_attitude, profile_length, vertical_exaggeration, segment_scale_factor=70.0):
+
+def define_plot_structural_segment(
+        structural_attitude,
+        profile_length,
+        vertical_exaggeration: Union[int, float] = 1,
+        segment_scale_factor: float = 70.0):
     """
 
     :param structural_attitude:
     :param profile_length:
     :param vertical_exaggeration:
-    :param segment_scale_factor:
+    :param segment_scale_factor: the scale factor controlling the attitude segment length in the plot.
     :return:
     """
 
     ve = float(vertical_exaggeration)
+
     intersection_point = structural_attitude.pt_3d
     z0 = intersection_point.z
 

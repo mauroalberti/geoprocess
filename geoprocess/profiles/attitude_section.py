@@ -1,8 +1,12 @@
+
+from typing import Optional
+
+
 from pygsf.spatial.vectorial.geometries import Point, Segment, CPlane
 from pygsf.geology.orientations import Plane
 
 
-def nearest_projection(
+def nearest_attitude_projection(
         section_cplane: CPlane,
         attitude_plane: Plane,
         attitude_pt: Point) -> Optional[Point]:
@@ -26,13 +30,13 @@ def nearest_projection(
     intersection_versor = section_cplane.intersVersor(attitude_cplane)
     dummy_inters_pt = section_cplane.intersPoint(attitude_cplane)
     dummy_structural_vect = Segment(dummy_inters_pt, attitude_pt).vector()
-    dummy_distance = dummy_structural_vect.sp(intersection_versor)
+    dummy_distance = dummy_structural_vect.vDot(intersection_versor)
     offset_vector = intersection_versor.scale(dummy_distance)
 
     return Point(
         x=dummy_inters_pt.x + offset_vector.x,
         y=dummy_inters_pt.y + offset_vector.y,
         z=dummy_inters_pt.z + offset_vector.z,
-        epsg_cd=crs)
+        epsg_cd=section_cplane.epsg())
 
 
