@@ -5,7 +5,7 @@ from typing import Optional
 from pygsf.spatial.vectorial.geometries import Point, Segment, CPlane
 from pygsf.geology.orientations import Plane
 
-
+'''
 def nearest_attitude_projection(
         section_cplane: CPlane,
         attitude_plane: Plane,
@@ -38,5 +38,5 @@ def nearest_attitude_projection(
         y=dummy_inters_pt.y + offset_vector.y,
         z=dummy_inters_pt.z + offset_vector.z,
         epsg_cd=section_cplane.epsg())
-
+'''
 

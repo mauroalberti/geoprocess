@@ -67,7 +67,7 @@ def profile_parameters(profile: Line) -> Tuple[List[float], List[float], List[fl
 
 class PlanarAttitude:
     """
-    Represent geological attitude along a profile.
+    Represent a geological attitude in a profile.
     """
 
     def __init__(self,
@@ -261,7 +261,7 @@ class LinearProfiler:
 
         return Crs(self._crs.epsg())
 
-    def epsg(self) -> float:
+    def epsg(self) -> int:
         """
         Returns the EPSG code of the profile.
 
@@ -280,6 +280,16 @@ class LinearProfiler:
         """
 
         return Segment(start_pt=self._start_pt, end_pt=self._end_pt)
+
+    def vector(self) -> Vect:
+        """
+        Returns the horizontal vector representing the profile.
+
+        :return: vector representing the profile.
+        :rtype: Vect.
+        """
+
+        return self.segment().vector()
 
     def densified_steps(self) -> array:
         """
@@ -320,6 +330,16 @@ class LinearProfiler:
         """
 
         return self.segment().vertical_plane()
+
+    def normal_versor(self) -> Vect:
+        """
+        Returns the perpendicular (horizontal) versor to the profiles (vertical) plane.
+
+        :return: the perpendicular (horizontal) versor to the profiles (vertical) plane.
+        :rtype: Vect.
+        """
+
+        return self.vertical_plane().normVersor()
 
     def get_z_values(self,
             grid: GeoArray) -> array:
@@ -367,35 +387,49 @@ class LinearProfiler:
         return grid_profiles
 
     def point_distance_with_sign(self,
-            projected_point: Point) -> float:
+            projected_point: Point) -> Optional[float]:
+        """
+        Calculates the point signed distance from the profiles start.
+
+        :param projected_point: the point on the section.
+        :type projected_point: Point.
+        :return: the optional signed distance on the profile.
+        :rtype: Optional[float].
         """
 
-        TODO clarify meaning of SECTION_VECTOR
+        if not isinstance(projected_point, Point):
+            raise Exception("Projected point should be Point but is {}".format(type(projected_point)))
 
-        :param projected_point:
-        :return:
-        """
-
-        assert projected_point.z != np.nan
-        assert projected_point.z is not None
+        if self.crs() != projected_point.crs():
+            raise Exception("Projected point should have {} EPSG but has {}".format(self.epsg(), projected_point.epsg()))
 
         projected_vector = Segment(self.start_pt(), projected_point).vector()
-        cos_alpha = section_vector.cos_angle(projected_vector)
+        cos_alpha = self.vector().angleCos(projected_vector)
 
-        return projected_vector.len_3d * cos_alpha
+        return projected_vector.len3D * cos_alpha
 
     def get_intersection_slope(self,
-            intersection_versor_3d: Vect) -> Tuple[float, str]:
+                intersection_vector: Vect) -> Tuple[float, str]:
         """
-        TODO clarify SECTION_VECTOR meaning
+        Calculates the slope (in radians) and the downward sense ('left', 'right' or 'vertical')
+        for a profile-laying vector.
 
-        :param intersection_versor_3d:
-        :param section_vector:
-        :return:
+        :param intersection_vector: the profile-plane lying vector.
+        :type intersection_vector: Vect,
+        :return: the slope (in radians) and the downward sense.
+        :rtype: Tuple[float, str].
+        :raise: Exception.
         """
 
-        slope_radians = abs(radians(intersection_versor_3d.slope))
-        scalar_product_for_downward_sense = section_vector.sp(intersection_versor_3d.downward)
+        if not isinstance(intersection_vector, Vect):
+            raise Exception("Input argument should be Vect but is {}".format(type(intersection_vector)))
+
+        if self.normal_versor().angleCos(intersection_vector) != 0.0:
+            raise Exception("Input argument should lay in the profile plane")
+
+        slope_radians = abs(radians(intersection_vector.slope_degr()))
+
+        scalar_product_for_downward_sense = self.vector().vDot(intersection_vector.downward())
         if scalar_product_for_downward_sense > 0.0:
             intersection_downward_sense = "right"
         elif scalar_product_for_downward_sense == 0.0:
@@ -406,15 +440,29 @@ class LinearProfiler:
         return slope_radians, intersection_downward_sense
 
     def calculate_axis_intersection(self,
-            map_axis,
-            structural_pt):
+            map_axis: Axis,
+            structural_pt: Point) -> Optional[Point]:
+        """
+        Calculates the optional intersection point between an axis passing through a point
+        and the profiler plane.
+
+        :param map_axis: the projection axis.
+        :type map_axis: Axis.
+        :param structural_pt: the point through which the axis passes.
+        :type structural_pt: Point.
+        :return: the optional intersection point.
+        :type: Optional[Point].
+        :raise: Exception.
         """
 
-        :param map_axis:
-        :param section_cartes_plane:
-        :param structural_pt:
-        :return:
-        """
+        if not isinstance(map_axis, Axis):
+            raise Exception("Map axis should be Axis but is {}".format(type(map_axis)))
+
+        if not isinstance(structural_pt, Point):
+            raise Exception("Structural point should be Point but is {}".format(type(structural_pt)))
+
+        if self.crs() != structural_pt.crs():
+            raise Exception("Structural point should have {} EPSG but has {}".format(self.epsg(), structural_pt.epsg()))
 
         axis_versor = map_axis.asDirect().asVersor()
 
@@ -424,56 +472,110 @@ class LinearProfiler:
 
         return axis_param_line.intersect_cartes_plane(self.vertical_plane())
 
-    def calculate_intersection_versor(self,
-        structural_cartes_plane: CPlane):
+    def calculate_intersection_versor(
+            self,
+            attitude_plane: Plane,
+            attitude_pt: Point) -> Optional[Vect]:
         """
+        Calculate the intersection versor between the plane profiler and
+        a geological plane with location defined by a Point.
 
-        :param structural_cartes_plane:
+        :param attitude_plane:
+        :type attitude_plane: Plane,
+        :param attitude_pt: the attitude point.
+        :type attitude_pt: Point.
         :return:
         """
 
-        return self.vertical_plane().inters_versor(structural_cartes_plane)
+        if not isinstance(attitude_plane, Plane):
+            raise Exception("Attitude plane should be Plane but is {}".format(type(attitude_plane)))
 
-    def calculate_nearest_intersection(self,
-            intersection_versor_3d,
-            structural_cartes_plane,
-            structural_pt):
+        if not isinstance(attitude_pt, Point):
+            raise Exception("Attitude point should be Point but is {}".format(type(attitude_pt)))
+
+        if self.crs() != attitude_pt.crs():
+            raise Exception("Attitude point should has EPSG {} but has {}".format(self.epsg(), attitude_pt.epsg()))
+
+        putative_inters_versor = self.vertical_plane().intersVersor(attitude_plane.toCPlane(attitude_pt))
+
+        if not putative_inters_versor.isValid:
+            return None
+
+        return putative_inters_versor
+
+    def nearest_attitude_projection(
+            self,
+            attitude_plane: Plane,
+            attitude_pt: Point) -> Optional[Point]:
+        """
+        Calculates the nearest projection of a given attitude on a vertical plane.
+
+        :param attitude_plane: geological attitude.
+        :type attitude_plane: pygsf.geology.orientations.Plane
+        :param attitude_pt: point of the geological attitude.
+        :type attitude_pt: pygsf.spatial.vectorial.geometries.Point.
+        :return: the nearest projected point on the vertical section.
+        :rtype: pygsf.spatial.vectorial.geometries.Point.
         """
 
-        :param intersection_versor_3d:
-        :param structural_cartes_plane:
-        :param structural_pt:
-        :return:
+        if not isinstance(attitude_pt, Point):
+            raise Exception("Attitude point should be Point but is {}".format(type(attitude_pt)))
+
+        if self.crs() != attitude_pt.crs():
+            raise Exception("Attitude point should has EPSG {} but has {}".format(self.epsg(), attitude_pt.epsg()))
+
+        if not isinstance(attitude_plane, Plane):
+            raise Exception("Attitude plane should be Plane but is {}".format(type(attitude_plane)))
+
+        attitude_cplane = attitude_plane.toCPlane(attitude_pt)
+        intersection_versor = self.vertical_plane().intersVersor(attitude_cplane)
+        dummy_inters_pt = self.vertical_plane().intersPoint(attitude_plane)
+        dummy_structural_vect = Segment(dummy_inters_pt, attitude_pt).vector()
+        dummy_distance = dummy_structural_vect.vDot(intersection_versor)
+        offset_vector = intersection_versor.scale(dummy_distance)
+
+        return Point(
+            x=dummy_inters_pt.x + offset_vector.x,
+            y=dummy_inters_pt.y + offset_vector.y,
+            z=dummy_inters_pt.z + offset_vector.z,
+            epsg_cd=self.epsg())
+
+    def map_attitude_to_section(
+            self,
+            attitude_pt: Point,
+            attitude_plane: Plane,
+            map_axis: Optional[Axis] = None) -> Optional[PlanarAttitude]:
         """
 
-        dummy_inters_point = self.vertical_plane().inters_point(structural_cartes_plane)
-        dummy_structural_vector = Segment(dummy_inters_point, structural_pt).vector()
-        dummy_distance = dummy_structural_vector.sp(intersection_versor_3d)
-        offset_vector = intersection_versor_3d.scale(dummy_distance)
-
-        return Point(dummy_inters_point.x + offset_vector.x,
-                     dummy_inters_point.y + offset_vector.y,
-                     dummy_inters_point.z + offset_vector.z)
-
-    def map_attitude_to_section(self,
-                                geological_pt: Point,
-                                geological_plane: Plane,
-                                map_axis=None) -> PlanarAttitude:
+        :param attitude_pt: the attitude point.
+        :type attitude_pt: Point.
+        :param attitude_plane: the attitude plane.
+        :type attitude_plane: Plane.
+        :param map_axis: the map axis.
+        :type map_axis: Optional[Axis].
+        :return: the optional planar attitude on the profiler vertical plane.
+        :rtype: Optional[PlanarAttitude].
         """
 
-        :param structural_rec:
-        :param section_data:
-        :param map_axis:
-        :return:
-        """
+        if not isinstance(attitude_pt, Point):
+            raise Exception("Attitude point should be Point but is {}".format(type(attitude_pt)))
+
+        if self.crs() != attitude_pt.crs():
+            raise Exception("Attitude point should has EPSG {} but has {}".format(self.epsg(), attitude_pt.epsg()))
+
+        if not isinstance(attitude_plane, Plane):
+            raise Exception("Attitude plane should be Plane but is {}".format(type(attitude_plane)))
+
+        if not isinstance(map_axis, Axis):
+            raise Exception("Map axis should be Axis but is {}".format(type(map_axis)))
 
         # transform geological plane attitude into Cartesian plane
 
-        geological_cplane = geological_plane.toCPlane(geological_pt)
+        attitude_cplane = attitude_plane.toCPlane(attitude_pt)
 
         # intersection versor
 
-        intersection_versor = self.calculate_intersection_versor(geological_cplane)
+        intersection_versor = self.calculate_intersection_versor(attitude_cplane)
 
         # calculate slope of geological plane onto section plane
 
@@ -482,14 +584,16 @@ class LinearProfiler:
         # intersection point
 
         if map_axis is None:
-            intersection_point_3d = self.calculate_nearest_intersection(
-                intersection_versor_3d=intersection_versor,
-                structural_cartes_plane=geological_cplane,
-                structural_pt=geological_pt)
+            intersection_point_3d = self.nearest_attitude_projection(
+                attitude_plane=attitude_plane,
+                attitude_pt=attitude_pt)
         else:
             intersection_point_3d = self.calculate_axis_intersection(
                 map_axis=map_axis,
-                structural_pt=geological_pt)
+                structural_pt=attitude_pt)
+
+        if not intersection_point_3d:
+            return None
 
         # horizontal spat_distance between projected structural point and profile start
 
@@ -505,7 +609,6 @@ class LinearProfiler:
 
     def map_struct_pts_on_section(self,
             structural_data,
-            section_data,
             mapping_method: dict):
         """
         defines:
@@ -519,11 +622,11 @@ class LinearProfiler:
         """
 
         if mapping_method['method'] == 'nearest':
-            return [self.map_attitude_to_section(structural_rec, section_data) for structural_rec in structural_data]
+            return [self.map_attitude_to_section(structural_pt, structural_plane) for (structural_pt, structural_plane) in structural_data]
 
         if mapping_method['method'] == 'common axis':
             map_axis = Axis(mapping_method['trend'], mapping_method['plunge'])
-            return [self.map_attitude_to_section(structural_rec, section_data, map_axis) for structural_rec in
+            return [self.map_attitude_to_section(structural_rec, map_axis) for structural_rec in
                     structural_data]
 
         if mapping_method['method'] == 'individual axes':
@@ -532,7 +635,7 @@ class LinearProfiler:
             for structural_rec, (trend, plunge) in zip(structural_data, mapping_method['individual_axes_values']):
                 try:
                     map_axis = Axis(trend, plunge)
-                    result.append(self.map_attitude_to_section(structural_rec, section_data, map_axis))
+                    result.append(self.map_attitude_to_section(structural_rec, map_axis))
                 except:
                     continue
             return result
