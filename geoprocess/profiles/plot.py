@@ -1,5 +1,6 @@
 
-from typing import Union
+from typing import Union, List, Optional
+
 
 """
 from builtins import zip
@@ -19,7 +20,7 @@ import matplotlib.pyplot as plt
 from pygsf.spatial.rasters.geoarray import GeoArray
 
 
-from .base import LinearProfiler, ScalarProfiles, TopoProfile
+from .base import *
 
 from ..widgets.qt_tools import qcolor2rgbmpl
 from ..widgets.mpl_widget import MplWidget, plot_line, plot_filled_line
@@ -130,15 +131,14 @@ def plot_topoprofile(topo_profile: TopoProfile, color: str = "blue", aspect: Uni
 """
 
 
-
 def define_plot_structural_segment(
-        structural_attitude,
-        profile_length,
+        profile_attitude: ProfileAttitude,
+        profile_length: Union[int, float],
         vertical_exaggeration: Union[int, float] = 1,
         segment_scale_factor: float = 70.0):
     """
 
-    :param structural_attitude:
+    :param profile_attitude:
     :param profile_length:
     :param vertical_exaggeration:
     :param segment_scale_factor: the scale factor controlling the attitude segment length in the plot.
@@ -147,12 +147,12 @@ def define_plot_structural_segment(
 
     ve = float(vertical_exaggeration)
 
-    intersection_point = structural_attitude.pt_3d
+    intersection_point = profile_attitude.pt_3d
     z0 = intersection_point.z
 
-    h_dist = structural_attitude.sign_hor_dist
-    slope_rad = structural_attitude.slope_rad
-    intersection_downward_sense = structural_attitude.dwnwrd_sense
+    h_dist = profile_attitude.sign_hor_dist
+    slope_rad = profile_attitude.slope_rad
+    intersection_downward_sense = profile_attitude.dwnwrd_sense
     length = profile_length / segment_scale_factor
 
     s_slope = sin(float(slope_rad))
@@ -180,24 +180,42 @@ def define_plot_structural_segment(
     return structural_segment_s, structural_segment_z
 
 
-def plot_structural_attitude(plot_addit_params, axes, section_length, vertical_exaggeration, structural_attitude_list, color):
+def plot_structural_attitudes(
+    profile_attitudes: List[Optional[ProfileAttitude]],
+    section_length,
+    axes,
+    vertical_exaggeration: Union[int, float] = 1.0,
+    plot_addit_params=None,
+    color='blue'
+) -> None:
+    """
 
-    # TODO:  manage case for possible nan z values
-    projected_z = [structural_attitude.pt_3d.z for structural_attitude in structural_attitude_list if
+    :param plot_addit_params:
+    :param axes:
+    :param section_length:
+    :param vertical_exaggeration:
+    :param profile_attitudes:
+    :type profile_attitudes: List[ProfileAttitude].
+    :param color:
+    :return: None
+    """
+
+    projected_z = [structural_attitude.z for structural_attitude in profile_attitudes if
                    0.0 <= structural_attitude.sign_hor_dist <= section_length]
 
-    # TODO:  manage case for possible nan z values
-    projected_s = [structural_attitude.sign_hor_dist for structural_attitude in structural_attitude_list if
+    projected_s = [structural_attitude.sign_hor_dist for structural_attitude in profile_attitudes if
                    0.0 <= structural_attitude.sign_hor_dist <= section_length]
 
-    projected_ids = [structural_attitude.id for structural_attitude in structural_attitude_list if
+    """
+    projected_ids = [structural_attitude.id for structural_attitude in profile_attitudes if
                      0.0 <= structural_attitude.sign_hor_dist <= section_length]
+    """
 
     axes.plot(projected_s, projected_z, 'o', color=color)
 
     # plot segments representing structural data
 
-    for structural_attitude in structural_attitude_list:
+    for structural_attitude in profile_attitudes:
         if 0.0 <= structural_attitude.sign_hor_dist <= section_length:
             structural_segment_s, structural_segment_z = define_plot_structural_segment(structural_attitude,
                                                                                         section_length,
@@ -205,12 +223,13 @@ def plot_structural_attitude(plot_addit_params, axes, section_length, vertical_e
 
             axes.plot(structural_segment_s, structural_segment_z, '-', color=color)
 
+    """
     if plot_addit_params["add_trendplunge_label"] or plot_addit_params["add_ptid_label"]:
 
         src_dip_dirs = [structural_attitude.src_geol_plane.dd for structural_attitude in
-                        structural_attitude_list if 0.0 <= structural_attitude.sign_hor_dist <= section_length]
+                        profile_attitudes if 0.0 <= structural_attitude.sign_hor_dist <= section_length]
         src_dip_angs = [structural_attitude.src_geol_plane.da for structural_attitude in
-                        structural_attitude_list if 0.0 <= structural_attitude.sign_hor_dist <= section_length]
+                        profile_attitudes if 0.0 <= structural_attitude.sign_hor_dist <= section_length]
 
         for rec_id, src_dip_dir, src_dip_ang, s, z in zip(projected_ids, src_dip_dirs, src_dip_angs, projected_s,
                                                           projected_z):
@@ -223,7 +242,7 @@ def plot_structural_attitude(plot_addit_params, axes, section_length, vertical_e
                 label = "%03d/%02d" % (src_dip_dir, src_dip_ang)
 
             axes.annotate(label, (s + 15, z + 15))
-
+    """
 
 def plot_projected_line_set(axes, curve_set, labels):
 
@@ -404,12 +423,12 @@ def plot_geoprofiles(geoprofiles, plot_addit_params, slope_padding=0.2):
 
         if len(geoprofile.geoplane_attitudes) > 0:
             for plane_attitude_set, color in zip(geoprofile.geoplane_attitudes, plot_addit_params["plane_attitudes_colors"]):
-                plot_structural_attitude(plot_addit_params,
-                                         axes_elevation,
-                                         plot_s_max,
-                                         vertical_exaggeration,
-                                         plane_attitude_set,
-                                         color)
+                plot_structural_attitudes(plot_addit_params,
+                                          axes_elevation,
+                                          plot_s_max,
+                                          vertical_exaggeration,
+                                          plane_attitude_set,
+                                          color)
 
         # plot geological traces projections
 

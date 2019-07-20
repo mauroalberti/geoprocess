@@ -1,10 +1,20 @@
 
 from typing import List, Tuple
 
+from collections import namedtuple
+
 from geopandas import GeoDataFrame
 
 from pygsf.spatial.vectorial.geometries import Point
 from pygsf.geology.orientations import Plane
+
+
+georef_att_flds = [
+    'point',
+    'attitude'
+]
+
+GeorefAttitude = namedtuple('GeorefAttitude', georef_att_flds)
 
 
 def extract_georeferenced_attitudes(
@@ -12,7 +22,7 @@ def extract_georeferenced_attitudes(
         dip_dir_fldnm: str,
         dip_ang_fldnm: str) -> List[Tuple[Point, Plane]]:
     """
-    Extracts the georeferenced attitudes from a geopandas GeoDataFrame instance.
+    Extracts the georeferenced attitudes from a geopandas GeoDataFrame instance representing point records.
 
     :param geodataframe: the source geodataframe.
     :type geodataframe: GeoDataFrame.
@@ -37,7 +47,7 @@ def extract_georeferenced_attitudes(
         pt = row['geometry']
         x, y = pt.x, pt.y
         dip_dir, dip_ang = row[dip_dir_fldnm], row[dip_ang_fldnm]
-        attitudes.append((Point(x, y, epsg_cd=epsg_cd), Plane(dip_dir, dip_ang)))
+        attitudes.append(GeorefAttitude(Point(x, y, epsg_cd=epsg_cd), Plane(dip_dir, dip_ang)))
 
     return attitudes
 
