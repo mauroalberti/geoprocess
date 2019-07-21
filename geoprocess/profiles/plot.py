@@ -13,6 +13,7 @@ from math import sin, cos, sqrt
 
 import numpy as np
 
+import matplotlib
 from matplotlib import gridspec
 import matplotlib.pyplot as plt
 
@@ -32,7 +33,11 @@ colors_addit = ["darkseagreen", "darkgoldenrod", "darkviolet", "hotpink", "powde
                 "chartreuse"]
 
 
-def plot_profiles(profiles: ScalarProfiles, aspect: Union[float, int] = 1, width: Union[float, int] = 18.5, height: Union[float, int] = 10.5):
+def plot_profiles(
+        profiles: ScalarProfiles,
+        aspect: Union[float, int] = 1,
+        width: Union[float, int] = 18.5,
+        height: Union[float, int] = 10.5):
     """
     Optionally plot a set of profiles with Matplotlib.
 
@@ -44,7 +49,8 @@ def plot_profiles(profiles: ScalarProfiles, aspect: Union[float, int] = 1, width
     :type width: Union[float, int].
     :param height: the plot height in inches.  # TOCHECK IF ALWAYS INCHES
     :type height: Union[float, int].
-    :return: None
+    :return: the figure.
+    :rtype:
     """
 
     fig, ax = plt.subplots()
@@ -57,6 +63,8 @@ def plot_profiles(profiles: ScalarProfiles, aspect: Union[float, int] = 1, width
     for z in profiles.zs():
         if z:
             ax.plot(s, z)
+
+    return fig
 
 """
 def plot_profile(profile: LinearProfiler, grid: GeoArray, color: str = "blue", aspect: Union[float, int] = 1, width: float = 18.5, height: float = 10.5):
@@ -147,11 +155,10 @@ def define_plot_structural_segment(
 
     ve = float(vertical_exaggeration)
 
-    intersection_point = profile_attitude.pt_3d
-    z0 = intersection_point.z
+    z0 = profile_attitude.z
 
     h_dist = profile_attitude.sign_hor_dist
-    slope_rad = profile_attitude.slope_rad
+    slope_rad = radians(profile_attitude.slope_degr)
     intersection_downward_sense = profile_attitude.dwnwrd_sense
     length = profile_length / segment_scale_factor
 
@@ -182,12 +189,12 @@ def define_plot_structural_segment(
 
 def plot_structural_attitudes(
     profile_attitudes: List[Optional[ProfileAttitude]],
-    section_length,
-    axes,
+    section_length: float,
+    fig,
     vertical_exaggeration: Union[int, float] = 1.0,
     plot_addit_params=None,
-    color='blue'
-) -> None:
+    color='red'
+):
     """
 
     :param plot_addit_params:
@@ -197,7 +204,8 @@ def plot_structural_attitudes(
     :param profile_attitudes:
     :type profile_attitudes: List[ProfileAttitude].
     :param color:
-    :return: None
+    :return: the figure.
+    :rtype:
     """
 
     projected_z = [structural_attitude.z for structural_attitude in profile_attitudes if
@@ -211,7 +219,7 @@ def plot_structural_attitudes(
                      0.0 <= structural_attitude.sign_hor_dist <= section_length]
     """
 
-    axes.plot(projected_s, projected_z, 'o', color=color)
+    fig.gca().plot(projected_s, projected_z, 'o', color=color)
 
     # plot segments representing structural data
 
@@ -221,7 +229,8 @@ def plot_structural_attitudes(
                                                                                         section_length,
                                                                                         vertical_exaggeration)
 
-            axes.plot(structural_segment_s, structural_segment_z, '-', color=color)
+            fig.gca().plot(structural_segment_s, structural_segment_z, '-', color=color)
+
 
     """
     if plot_addit_params["add_trendplunge_label"] or plot_addit_params["add_ptid_label"]:
@@ -241,8 +250,13 @@ def plot_structural_attitudes(
             elif plot_addit_params["add_trendplunge_label"]:
                 label = "%03d/%02d" % (src_dip_dir, src_dip_ang)
 
-            axes.annotate(label, (s + 15, z + 15))
+            fig.gca().annotate(label, (s + 15, z + 15))
     """
+
+    #matplotlib.pyplot.show()
+
+    return fig
+
 
 def plot_projected_line_set(axes, curve_set, labels):
 

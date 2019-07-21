@@ -53,5 +53,6 @@ def plot_line(fig: Figure, line: Line) -> Figure:
     """
 
     fig.gca().plot(line.x_list(), line.y_list(), '-')
+
     return fig
 

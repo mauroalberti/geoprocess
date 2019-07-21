@@ -1,6 +1,6 @@
 from typing import List, Tuple, Optional, Dict
 
-from math import degrees, asin, cos, pi, radians, isfinite
+from math import degrees, asin, cos, pi, radians, isfinite, acos
 from array import array
 import itertools
 
@@ -85,6 +85,7 @@ class ProfileAttitude:
         :param sign_hor_dist:
         """
 
+        self.z = z
         self.slope_degr = slope_degr
         self.dwnwrd_sense = dwnwrd_sense
         self.sign_hor_dist = sign_hor_dist
@@ -285,6 +286,16 @@ class LinearProfiler:
 
         return Segment(start_pt=self._start_pt, end_pt=self._end_pt)
 
+    def length(self) -> float:
+        """
+        Returns the length of the profiler section.
+
+        :return: length of the profiler section.
+        :rtype: float.
+        """
+
+        return self.segment().length_3d()
+
     def vector(self) -> Vect:
         """
         Returns the horizontal vector representing the profile.
@@ -428,7 +439,8 @@ class LinearProfiler:
         if not isinstance(intersection_vector, Vect):
             raise Exception("Input argument should be Vect but is {}".format(type(intersection_vector)))
 
-        if self.normal_versor().angleCos(intersection_vector) != 0.0:
+        angle = degrees(acos(self.normal_versor().angleCos(intersection_vector)))
+        if abs(90.0 - angle) > 1.0e-4:
             raise Exception("Input argument should lay in the profile plane")
 
         slope_radians = abs(radians(intersection_vector.slope_degr()))
@@ -559,8 +571,9 @@ class LinearProfiler:
         if self.crs() != georef_attitude.point.crs():
             raise Exception("Attitude point should has EPSG {} but has {}".format(self.epsg(), georef_attitude.point.epsg()))
 
-        if not isinstance(map_axis, Axis):
-            raise Exception("Map axis should be Axis but is {}".format(type(map_axis)))
+        if map_axis:
+            if not isinstance(map_axis, Axis):
+                raise Exception("Map axis should be Axis but is {}".format(type(map_axis)))
 
         # transform geological plane attitude into Cartesian plane
 
@@ -568,7 +581,10 @@ class LinearProfiler:
 
         # intersection versor
 
-        intersection_versor = self.calculate_intersection_versor(attitude_cplane)
+        intersection_versor = self.calculate_intersection_versor(
+            attitude_plane=georef_attitude.attitude,
+            attitude_pt=georef_attitude.point
+        )
 
         # calculate slope of geological plane onto section plane
 
