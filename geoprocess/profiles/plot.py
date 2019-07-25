@@ -157,9 +157,9 @@ def define_plot_structural_segment(
 
     z0 = profile_attitude.z
 
-    h_dist = profile_attitude.sign_hor_dist
+    h_dist = profile_attitude.s
     slope_rad = radians(profile_attitude.slope_degr)
-    intersection_downward_sense = profile_attitude.dwnwrd_sense
+    intersection_downward_sense = profile_attitude.down_sense
     length = profile_length / segment_scale_factor
 
     s_slope = sin(float(slope_rad))
@@ -209,14 +209,14 @@ def plot_structural_attitudes(
     """
 
     projected_z = [structural_attitude.z for structural_attitude in profile_attitudes if
-                   0.0 <= structural_attitude.sign_hor_dist <= section_length]
+                   0.0 <= structural_attitude.s <= section_length]
 
-    projected_s = [structural_attitude.sign_hor_dist for structural_attitude in profile_attitudes if
-                   0.0 <= structural_attitude.sign_hor_dist <= section_length]
+    projected_s = [structural_attitude.s for structural_attitude in profile_attitudes if
+                   0.0 <= structural_attitude.s <= section_length]
 
     """
     projected_ids = [structural_attitude.id for structural_attitude in profile_attitudes if
-                     0.0 <= structural_attitude.sign_hor_dist <= section_length]
+                     0.0 <= structural_attitude.s <= section_length]
     """
 
     fig.gca().plot(projected_s, projected_z, 'o', color=color)
@@ -224,7 +224,7 @@ def plot_structural_attitudes(
     # plot segments representing structural data
 
     for structural_attitude in profile_attitudes:
-        if 0.0 <= structural_attitude.sign_hor_dist <= section_length:
+        if 0.0 <= structural_attitude.s <= section_length:
             structural_segment_s, structural_segment_z = define_plot_structural_segment(structural_attitude,
                                                                                         section_length,
                                                                                         vertical_exaggeration)
@@ -236,9 +236,9 @@ def plot_structural_attitudes(
     if plot_addit_params["add_trendplunge_label"] or plot_addit_params["add_ptid_label"]:
 
         src_dip_dirs = [structural_attitude.src_geol_plane.dd for structural_attitude in
-                        profile_attitudes if 0.0 <= structural_attitude.sign_hor_dist <= section_length]
+                        profile_attitudes if 0.0 <= structural_attitude.s <= section_length]
         src_dip_angs = [structural_attitude.src_geol_plane.da for structural_attitude in
-                        profile_attitudes if 0.0 <= structural_attitude.sign_hor_dist <= section_length]
+                        profile_attitudes if 0.0 <= structural_attitude.s <= section_length]
 
         for rec_id, src_dip_dir, src_dip_ang, s, z in zip(projected_ids, src_dip_dirs, src_dip_angs, projected_s,
                                                           projected_z):

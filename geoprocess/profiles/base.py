@@ -1,17 +1,17 @@
 from typing import List, Tuple, Optional, Dict
 
+from operator import attrgetter
+
 from math import degrees, asin, cos, pi, radians, isfinite, acos
 from array import array
 import itertools
-
-import numpy as np
 
 from pygsf.spatial.vectorial.geometries import *
 from pygsf.spatial.rasters.geoarray import GeoArray
 from pygsf.spatial.projections.geodetic import *
 from pygsf.geology.orientations import *
 
-from ..geology.convert import GeorefAttitude
+from ..geology.base import GeorefAttitude
 
 
 def profile_parameters(profile: Line) -> Tuple[List[float], List[float], List[float]]:
@@ -72,23 +72,48 @@ class ProfileAttitude:
     Represent a geological attitude projected onto a vertical profile.
     """
 
-    def __init__(self,
-            z: float,
-            slope_degr: float,
-            dwnwrd_sense,
-            sign_hor_dist):
+    def __init__(
+        self,
+        id: int,
+        s: float,
+        z: float,
+        slope_degr: float,
+        down_sense: str
+):
         """
-
+        :param id: the identifier of the observation.
+        :type id: int.
+        :param s: the signed horizontal distance along the profile.
+        :type s: float (note: may exceed a profile range, both before, negative values, or after its end.
         :param z: the height of the attitude in the profile.
-        :param slope_degr: the slope of the attitude in the profile, Unit is degrees.
-        :param dwnwrd_sense:
-        :param sign_hor_dist:
+        :type z: float.
+        :param slope_degr: the slope of the attitude in the profile. Unit is degrees.
+        :type slope_degr: float.
+        :param down_sense: downward sense, to the right or to the profile left.
+        :type down_sense: str.
         """
 
+        self.id = id
+        self.s = s
         self.z = z
         self.slope_degr = slope_degr
-        self.dwnwrd_sense = dwnwrd_sense
-        self.sign_hor_dist = sign_hor_dist
+        self.down_sense = down_sense
+
+    def __repr__(self) -> str:
+        """
+        Creates the representation of a ProfileAttitude instance.
+
+        :return: the representation of a ProfileAttitude instance.
+        :rtype: str.
+        """
+
+        return"ProfileAttitude(id={}, s={}, z={}, slope_degr={}, down_sense={})".format(
+            self.id,
+            self.s,
+            self.z,
+            self.slope_degr,
+            self.down_sense
+        )
 
 
 class ScalarProfiles:
@@ -234,7 +259,7 @@ class LinearProfiler:
         self._start_pt = Point(x=start_pt.x, y=start_pt.y, epsg_cd=epsg_cd)
         self._end_pt = Point(x=end_pt.x, y=end_pt.y, epsg_cd=epsg_cd)
         self._crs = Crs(epsg_cd)
-        self._densify_dist = densify_distance
+        self._densify_dist = float(densify_distance)
 
     def start_pt(self) -> Point:
         """
@@ -255,6 +280,30 @@ class LinearProfiler:
         """
 
         return self._end_pt.clone()
+
+    def densify_dist(self) -> float:
+        """
+        Returns the densify distance of the profiler.
+
+        :return: the densify distance of the profiler.
+        :rtype: float.
+        """
+
+        return self._densify_dist
+
+    def __repr__(self):
+        """
+        Representation of a profile instance.
+
+        :return: the textual representation of the instance.
+        :rtype: str.
+        """
+
+        return "LinearProfiler(start_pt={}, end_pt={}, densify_distance={})".format(
+            self.start_pt(),
+            self.end_pt(),
+            self.densify_dist()
+        )
 
     def crs(self) -> Crs:
         """
@@ -356,6 +405,32 @@ class LinearProfiler:
 
         return self.vertical_plane().normVersor()
 
+    def point_in_profile(self, pt: Point) -> bool:
+        """
+        Checks whether a point lie in the profiler plane.
+
+        :param pt: the point to check.
+        :type pt: Point.
+        :return: whether the point lie in the profiler plane.
+        :rtype: bool.
+        :raise; Exception.
+        """
+
+        return self.vertical_plane().isPointInPlane(pt)
+
+    def point_distance(self, pt: Point) -> float:
+        """
+        Calcultes the point distance from the profiler plane.
+
+        :param pt: the point to check.
+        :type pt: Point.
+        :return: the point distance from the profiler plane.
+        :rtype: float.
+        :raise; Exception.
+        """
+
+        return self.vertical_plane().pointDistance(pt)
+
     def get_z_values(self,
             grid: GeoArray) -> array:
         """
@@ -401,24 +476,34 @@ class LinearProfiler:
 
         return grid_profiles
 
-    def point_distance_with_sign(self,
-            projected_point: Point) -> Optional[float]:
+    def point_signed_s(
+            self,
+            pt: Point) -> float:
         """
         Calculates the point signed distance from the profiles start.
+        The projected point must already lay in the profile vertical plane, otherwise an exception is raised.
 
-        :param projected_point: the point on the section.
-        :type projected_point: Point.
-        :return: the optional signed distance on the profile.
-        :rtype: Optional[float].
+        The implementation assumes (and verifies) that the point lies in the profile vertical plane.
+        Given that case, it calculates the signed distance from the section start point,
+        by using the triangle law of sines.
+
+        :param pt: the point on the section.
+        :type pt: Point.
+        :return: the signed distance on the profile.
+        :rtype: float.
+        :raise: Exception.
         """
 
-        if not isinstance(projected_point, Point):
-            raise Exception("Projected point should be Point but is {}".format(type(projected_point)))
+        if not isinstance(pt, Point):
+            raise Exception("Projected point should be Point but is {}".format(type(pt)))
 
-        if self.crs() != projected_point.crs():
-            raise Exception("Projected point should have {} EPSG but has {}".format(self.epsg(), projected_point.epsg()))
+        if self.crs() != pt.crs():
+            raise Exception("Projected point should have {} EPSG but has {}".format(self.epsg(), pt.epsg()))
 
-        projected_vector = Segment(self.start_pt(), projected_point).vector()
+        if not self.point_in_profile(pt):
+            raise Exception("Projected point should lie in the profile plane but there is a distance of {} units".format(self.point_distance(pt)))
+
+        projected_vector = Segment(self.start_pt(), pt).vector()
         cos_alpha = self.vector().angleCos(projected_vector)
 
         return projected_vector.len3D * cos_alpha
@@ -521,7 +606,7 @@ class LinearProfiler:
 
     def nearest_attitude_projection(
             self,
-            georef_attitude: GeorefAttitude) -> Optional[Point]:
+            georef_attitude: GeorefAttitude) -> Point:
         """
         Calculates the nearest projection of a given attitude on a vertical plane.
 
@@ -529,26 +614,29 @@ class LinearProfiler:
         :type georef_attitude: GeorefAttitude
         :return: the nearest projected point on the vertical section.
         :rtype: pygsf.spatial.vectorial.geometries.Point.
+        :raise: Exception.
         """
 
         if not isinstance(georef_attitude, GeorefAttitude):
             raise Exception("georef_attitude point should be GeorefAttitude but is {}".format(type(georef_attitude)))
 
-        if self.crs() != georef_attitude.point.crs():
-            raise Exception("Attitude point should has EPSG {} but has {}".format(self.epsg(), georef_attitude.point.epsg()))
+        if self.crs() != georef_attitude.posit.crs():
+            raise Exception("Attitude point should has EPSG {} but has {}".format(self.epsg(), georef_attitude.posit.epsg()))
 
-        attitude_cplane = georef_attitude.attitude.toCPlane(georef_attitude.point)
+        attitude_cplane = georef_attitude.attitude.toCPlane(georef_attitude.posit)
         intersection_versor = self.vertical_plane().intersVersor(attitude_cplane)
         dummy_inters_pt = self.vertical_plane().intersPoint(attitude_cplane)
-        dummy_structural_vect = Segment(dummy_inters_pt, georef_attitude.point).vector()
+        dummy_structural_vect = Segment(dummy_inters_pt, georef_attitude.posit).vector()
         dummy_distance = dummy_structural_vect.vDot(intersection_versor)
         offset_vector = intersection_versor.scale(dummy_distance)
 
-        return Point(
+        projected_pt = Point(
             x=dummy_inters_pt.x + offset_vector.x,
             y=dummy_inters_pt.y + offset_vector.y,
             z=dummy_inters_pt.z + offset_vector.z,
             epsg_cd=self.epsg())
+
+        return projected_pt
 
     def map_attitude_to_section(
             self,
@@ -568,22 +656,18 @@ class LinearProfiler:
         if not isinstance(georef_attitude, GeorefAttitude):
             raise Exception("Georef attitude should be GeorefAttitude but is {}".format(type(georef_attitude)))
 
-        if self.crs() != georef_attitude.point.crs():
-            raise Exception("Attitude point should has EPSG {} but has {}".format(self.epsg(), georef_attitude.point.epsg()))
+        if self.crs() != georef_attitude.posit.crs():
+            raise Exception("Attitude point should has EPSG {} but has {}".format(self.epsg(), georef_attitude.posit.epsg()))
 
         if map_axis:
             if not isinstance(map_axis, Axis):
                 raise Exception("Map axis should be Axis but is {}".format(type(map_axis)))
 
-        # transform geological plane attitude into Cartesian plane
-
-        attitude_cplane = georef_attitude.attitude.toCPlane(georef_attitude.point)
-
         # intersection versor
 
         intersection_versor = self.calculate_intersection_versor(
             attitude_plane=georef_attitude.attitude,
-            attitude_pt=georef_attitude.point
+            attitude_pt=georef_attitude.posit
         )
 
         # calculate slope of geological plane onto section plane
@@ -598,34 +682,36 @@ class LinearProfiler:
         else:
             intersection_point_3d = self.calculate_axis_intersection(
                 map_axis=map_axis,
-                structural_pt=georef_attitude.point)
+                structural_pt=georef_attitude.posit)
 
         if not intersection_point_3d:
             return None
 
         # horizontal spat_distance between projected structural point and profile start
 
-        signed_distance_from_section_start = self.point_distance_with_sign(intersection_point_3d)
+        signed_distance_from_section_start = self.point_signed_s(intersection_point_3d)
 
         # solution for current structural point
 
         return ProfileAttitude(
+            id=georef_attitude.id,
+            s=signed_distance_from_section_start,
             z=intersection_point_3d.z,
             slope_degr=degrees(slope_radians),
-            dwnwrd_sense=intersection_downward_sense,
-            sign_hor_dist=signed_distance_from_section_start
+            down_sense=intersection_downward_sense
         )
 
-    def map_struct_pts_on_section(self,
-            structural_data: List[GeorefAttitude],
-            mapping_method: dict,
-            height_source: Optional[GeoArray] = None) -> List[Optional[ProfileAttitude]]:
+    def map_georef_attitudes_to_section(
+        self,
+        structural_data: List[GeorefAttitude],
+        mapping_method: dict,
+        height_source: Optional[GeoArray] = None) -> List[Optional[ProfileAttitude]]:
         """
         Projects a set of georeferenced attitudes onto the section profile,
         optionally extracting point heights from a grid.
 
         defines:
-            - 2D x-y location in section
+            - 2D x-y position in section
             - plane-plane segment intersection
 
         :param structural_data: the set of georeferenced attitudes to plot on the section.
@@ -634,7 +720,9 @@ class LinearProfiler:
         ;type mapping_method; Dict.
         :param height_source: the attitudes elevation source. Default is None.
         :type height: Optional[GeoArray].
-        :return:
+        :return: sorted list of ProfileAttitude values.
+        :rtype: List[Optional[ProfileAttitude]].
+        :raise: Exception.
         """
 
         if height_source:
@@ -645,31 +733,40 @@ class LinearProfiler:
             attitudes_3d = []
             for georef_attitude in structural_data:
                 pt3d = height_source.interpolate_bilinear_point(
-                    pt=georef_attitude.point)
+                    pt=georef_attitude.posit)
                 if pt3d:
-                    attitudes_3d.append(GeorefAttitude(pt3d, georef_attitude.attitude))
+                    attitudes_3d.append(GeorefAttitude(
+                        georef_attitude.id,
+                        pt3d,
+                        georef_attitude.attitude))
 
         else:
 
             attitudes_3d = structural_data
 
         if mapping_method['method'] == 'nearest':
-            return [self.map_attitude_to_section(georef_att) for georef_att in attitudes_3d]
-
-        if mapping_method['method'] == 'common axis':
+            results = [self.map_attitude_to_section(georef_att) for georef_att in attitudes_3d]
+        elif mapping_method['method'] == 'common axis':
             map_axis = Axis(mapping_method['trend'], mapping_method['plunge'])
-            return [self.map_attitude_to_section(georef_att, map_axis) for georef_att in attitudes_3d]
+            results = [self.map_attitude_to_section(georef_att, map_axis) for georef_att in attitudes_3d]
+        elif mapping_method['method'] == 'individual axes':
+            if len(mapping_method['individual_axes_values']) != len(attitudes_3d):
+                raise Exception(
+                    "Individual axes values are {} but attitudes are {}".format(
+                        len(mapping_method['individual_axes_values']),
+                        len(attitudes_3d)
+                    )
+                )
 
-        if mapping_method['method'] == 'individual axes':
-            assert len(mapping_method['individual_axes_values']) == len(attitudes_3d)
-            result = []
+            results = []
             for georef_att, (trend, plunge) in zip(attitudes_3d, mapping_method['individual_axes_values']):
                 try:
                     map_axis = Axis(trend, plunge)
-                    result.append(self.map_attitude_to_section(georef_att, map_axis))
+                    results.append(self.map_attitude_to_section(georef_att, map_axis))
                 except:
                     continue
-            return result
+
+        return sorted(results, key=attrgetter('s'))
 
 
 class TopoProfile:
@@ -1259,7 +1356,7 @@ class PlaneAttitude:
 
     """
 
-    def __init__(self, rec_id, source_point_3d, source_geol_plane, point_3d, slope_rad, dwnwrd_sense, sign_hor_dist):
+    def __init__(self, rec_id, source_point_3d, source_geol_plane, point_3d, slope_rad, down_sense, s):
         """
 
         :param rec_id:
@@ -1267,8 +1364,8 @@ class PlaneAttitude:
         :param source_geol_plane:
         :param point_3d:
         :param slope_rad:
-        :param dwnwrd_sense:
-        :param sign_hor_dist:
+        :param down_sense:
+        :param s:
         """
 
         self.id = rec_id
@@ -1276,8 +1373,8 @@ class PlaneAttitude:
         self.src_geol_plane = source_geol_plane
         self.pt_3d = point_3d
         self.slope_rad = slope_rad
-        self.dwnwrd_sense = dwnwrd_sense
-        self.sign_hor_dist = sign_hor_dist
+        self.down_sense = down_sense
+        self.s = s
 '''
 
 """
@@ -1431,7 +1528,7 @@ def intersection_distances_by_profile_start_list(profile_line, intersections):
     assert len(profile_segment2d_list) == 1
     profile_segment2d = profile_segment2d_list[0]
 
-    # determine distances for each point in intersection list
+    # determine distances for each position in intersection list
     # creating a list of float values
     distance_from_profile_start_list = []
     for intersection in intersections:

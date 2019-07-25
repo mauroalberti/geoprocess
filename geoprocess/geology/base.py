@@ -1,6 +1,18 @@
 
+from typing import Optional, List
+
+from collections import namedtuple
 
 from pygsf.geology.faults import *
+
+
+georef_att_flds = [
+    'id',
+    'posit',
+    'attitude'
+]
+
+GeorefAttitude = namedtuple('GeorefAttitude', georef_att_flds)
 
 
 class StructuralSet:
