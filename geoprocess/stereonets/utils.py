@@ -2,6 +2,8 @@
 
 from typing import Optional
 
+import numbers
+
 from geoprocess.stereonets.exceptions import *
 
 
@@ -15,7 +17,7 @@ def rake_to_apsg_movsense(rake: [int, float]) -> Optional[int]:
     :rtype: int
     """
 
-    if not isinstance(rake, (int, float)):
+    if not isinstance(rake, numbers.Real):
         raise RakeInputException("Input rake value must be number")
 
     if 0 < rake < 180:  # reverse faults according to Aki & Richards, 1980 convention

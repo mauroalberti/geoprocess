@@ -2,6 +2,7 @@
 
 
 from typing import List, Tuple, Dict
+import numbers
 
 from PyQt5.QtGui import QIcon, QColor
 from PyQt5.QtWidgets import QAction, QComboBox, QMessageBox

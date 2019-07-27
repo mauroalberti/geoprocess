@@ -1,17 +1,12 @@
 # -*- coding: utf-8 -*-
 
 
-import geopandas
-
 import unittest
 
 
 from pygsf.spatial.vectorial.geometries import *
 
-from geoprocess.profiles.base import *
-from geoprocess.vectorial.io import read_linestring_geometries
-from geoprocess.geology.convert import extract_georeferenced_attitudes
-
+from geoprocess.profiles.profilers import LinearProfiler
 
 src_profile_shapefile_pth = "/home/mauro/Documents/projects/geoprocess/example_data/mt_alpi/profile.shp"
 attitudes_shape = "/home/mauro/Documents/projects/geoprocess/example_data/mt_alpi/attitudes.shp"
