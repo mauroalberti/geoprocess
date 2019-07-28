@@ -1,34 +1,19 @@
 
-from math import pi, asin
-
-import matplotlib
-from matplotlib import pyplot as plt
-
 from pygsf.spatial.vectorial.geometries import *
 
 from ..widgets.mpl_widget import plot_line, plot_filled_line
 from ..widgets.qt_tools import qcolor2rgbmpl
 
 from .elements import *
+from .chains import *
 
 
-class Attitudes(list):
-
-    def __init__(self, atts: List[Attitude]):
-
-        for el in atts:
-            if not isinstance(el, Attitude):
-                raise Exception("All input elements must be Attitude instances ({} provided)".format(type(el)))
-
-        super(Attitudes, self).__init__(atts)
-
-
-class Drills:
+class DrillsProjcts:
 
     pass
 
 
-class Scalars:
+class ScalarProfiles(list):
     """
     Class storing a set (one or more) of scalar profiles.
 
@@ -40,77 +25,9 @@ class Scalars:
 
     """
 
-    def __init__(self, s_array: array, *z_arrays: Tuple[Optional[array]]):
+    def __init__(self):
 
-        if not isinstance(s_array, array):
-            raise Exception("s array must be of array type")
-        if s_array.typecode != 'd':
-            raise Exception("s array must be of type double")
-
-        num_steps = len(s_array)
-
-        for z_array in z_arrays:
-            if z_array:
-                if not isinstance(z_array, array):
-                    raise Exception("All z arrays must be an array")
-                if z_array.typecode != 'd':
-                    raise Exception("All z arrays must be of type double")
-                if len(z_array) != num_steps:
-                    raise Exception("All z arrays must have the same length of s array")
-
-        self._num_steps = num_steps
-        self._s = s_array
-        self._zs = [z_array for z_array in z_arrays]
-
-    def add_zs(self, z_array: Optional[array]):
-        """
-        Add an array of z values.
-
-        :param z_array: the z array to add.
-        :type z_array: array.
-        :return: None
-        """
-
-        if z_array:
-
-            if not isinstance(z_array, array):
-                raise Exception("z array must be an array")
-            if z_array.typecode != 'd':
-                raise Exception("z array must be of type double")
-            if len(z_array) != self._num_steps:
-                raise Exception("z array must have the same length of s array")
-
-        self._zs.append(z_array)
-
-    def s(self) -> array:
-        """
-        Return the s array.
-
-        :return: the s array.
-        :rtype: array.
-        """
-
-        return self._s
-
-    def zs(self) -> List[Optional[array]]:
-        """
-        Return the list of optional z arrays.
-
-        :return: the z arrays
-        :rtype: List[Optional[array]].
-        """
-
-        return self._zs
-
-    def num_steps(self) -> int:
-        """
-        Return the number of steps of the profiles.
-
-        :return: number of steps of the profiles.
-        :rtype: int.
-        """
-
-        return self._num_steps
+        super(ScalarProfiles, self).__init__()
 
     def num_profiles(self) -> int:
         """
@@ -120,7 +37,7 @@ class Scalars:
         :rtype: int.
         """
 
-        return len(self._zs)
+        return len(self)
 
 
 class ScalarsPrevious:
@@ -270,17 +187,17 @@ class ScalarsPrevious:
         return self._line.abs_slopes_stats()
 
 
-class LineInters:
+class LinesIntersections:
 
     pass
 
 
-class LinesProject:
+class TracesProjections:
 
     pass
 
 
-class PolyInters:
+class PolygonsIntersections:
 
     pass
 
@@ -338,51 +255,6 @@ def profile_parameters(profile: Line) -> Tuple[List[float], List[float], List[fl
     return horiz_dist_values, dist_3d_values, dir_slopes_rads
 
 
-def plot_structural_attitudes(
-    fig,
-    profile_attitudes: List[Optional[Attitude]],
-    section_length: float,
-
-    #vertical_exaggeration: Union[int, float] = 1.0,
-    plot_addit_params=None,
-    color='red'
-):
-    """
-
-    :param plot_addit_params:
-    :param axes:
-    :param section_length:
-    :param profile_attitudes:
-    :type profile_attitudes: List[ProfileAttitude].
-    :param color:
-    :return: the figure.
-    :rtype:
-    """
-
-    projected_z = [structural_attitude.z for structural_attitude in profile_attitudes if
-                   0.0 <= structural_attitude.s <= section_length]
-
-    projected_s = [structural_attitude.s for structural_attitude in profile_attitudes if
-                   0.0 <= structural_attitude.s <= section_length]
-
-    projected_ids = [structural_attitude.id for structural_attitude in profile_attitudes if
-                     0.0 <= structural_attitude.s <= section_length]
-
-    axes = fig.gca()
-    vertical_exaggeration = axes.get_aspect()
-
-    axes.plot(projected_s, projected_z, 'o', color=color)
-
-    # plot segments representing structural data
-
-    for structural_attitude in profile_attitudes:
-        if 0.0 <= structural_attitude.s <= section_length:
-            structural_segment_s, structural_segment_z = define_plot_structural_segment(structural_attitude,
-                                                                                        section_length,
-                                                                                        vertical_exaggeration)
-
-            fig.gca().plot(structural_segment_s, structural_segment_z, '-', color=color)
-
 
     """
     if plot_addit_params["add_trendplunge_label"] or plot_addit_params["add_ptid_label"]:
@@ -430,15 +302,17 @@ def plot_profile_polygon_intersection_line(plot_addit_params, axes, intersection
 
 
 def plot_profiles(
-        profiles: Scalars,
+        profiles: ScalarProfiles,
         aspect: Union[float, int] = 1,
         width: Union[float, int] = 18.5,
         height: Union[float, int] = 10.5):
     """
+    Deprecated. Use inner method of Geoprofile class.
+
     Optionally plot a set of profiles with Matplotlib.
 
     :param profiles: the profiles to plot.
-    :type profiles: Scalars
+    :type profiles: ScalarProfiles
     :param aspect: the plot aspect.
     :type aspect: Union[float, int].
     :param width: the plot width, in inches. # TOCHECK IF ALWAYS INCHES

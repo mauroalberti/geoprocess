@@ -9,8 +9,9 @@ from math import acos
 from pygsf.geology.orientations import *
 from pygsf.spatial.rasters.geoarray import *
 
+from ..types.utils import check_type
 from ..geology.base import GeorefAttitude
-
+from .chains import *
 from .sets import *
 
 
@@ -255,8 +256,28 @@ class LinearProfiler:
 
         return array('d', [grid.interpolate_bilinear(pt_2d.x, pt_2d.y) for pt_2d in self.densified_points()])
 
+    def profile_grid(
+            self,
+            geoarray: GeoArray) -> ScalarProfile:
+        """
+        Create profile from one geoarray.
+
+        :param geoarray: the source geoarray.
+        :type geoarray: GeoArray.
+        :return: the profile of the scalar variable stored in the geoarray.
+        :rtype: ScalarProfile.
+        :raise: Exception.
+        """
+
+        check_type(geoarray, "GeoArray", GeoArray)
+
+        return ScalarProfile(
+            s_array=self.densified_steps(),
+            z_array=self.sample_grid(geoarray))
+
+
     def profile_grids(self,
-            *grids: Tuple[GeoArray]) -> Optional[Scalars]:
+            *grids: Tuple[GeoArray]) -> Optional[ScalarProfiles]:
         """
         Create profiles of one or more grids.
 
@@ -270,7 +291,7 @@ class LinearProfiler:
             if not isinstance(grid, GeoArray):
                 return None
 
-        grid_profiles = Scalars(
+        grid_profiles = ScalarProfiles(
             s_array=self.densified_steps())
 
         for grid in grids:
@@ -393,13 +414,13 @@ class LinearProfiler:
         """
 
         if not isinstance(attitude_plane, Plane):
-            raise Exception("Attitude plane should be Plane but is {}".format(type(attitude_plane)))
+            raise Exception("AttitudePrjct plane should be Plane but is {}".format(type(attitude_plane)))
 
         if not isinstance(attitude_pt, Point):
-            raise Exception("Attitude point should be Point but is {}".format(type(attitude_pt)))
+            raise Exception("AttitudePrjct point should be Point but is {}".format(type(attitude_pt)))
 
         if self.crs() != attitude_pt.crs():
-            raise Exception("Attitude point should has EPSG {} but has {}".format(self.epsg(), attitude_pt.epsg()))
+            raise Exception("AttitudePrjct point should has EPSG {} but has {}".format(self.epsg(), attitude_pt.epsg()))
 
         putative_inters_versor = self.vertical_plane().intersVersor(attitude_plane.toCPlane(attitude_pt))
 
@@ -425,7 +446,7 @@ class LinearProfiler:
             raise Exception("georef_attitude point should be GeorefAttitude but is {}".format(type(georef_attitude)))
 
         if self.crs() != georef_attitude.posit.crs():
-            raise Exception("Attitude point should has EPSG {} but has {}".format(self.epsg(), georef_attitude.posit.epsg()))
+            raise Exception("AttitudePrjct point should has EPSG {} but has {}".format(self.epsg(), georef_attitude.posit.epsg()))
 
         attitude_cplane = georef_attitude.attitude.toCPlane(georef_attitude.posit)
         intersection_versor = self.vertical_plane().intersVersor(attitude_cplane)
@@ -445,7 +466,7 @@ class LinearProfiler:
     def map_attitude_to_section(
             self,
             georef_attitude: GeorefAttitude,
-            map_axis: Optional[Axis] = None) -> Optional[Attitude]:
+            map_axis: Optional[Axis] = None) -> Optional[AttitudePrjct]:
         """
         Project a georeferenced attitude to the section.
 
@@ -461,7 +482,7 @@ class LinearProfiler:
             raise Exception("Georef attitude should be GeorefAttitude but is {}".format(type(georef_attitude)))
 
         if self.crs() != georef_attitude.posit.crs():
-            raise Exception("Attitude point should has EPSG {} but has {}".format(self.epsg(), georef_attitude.posit.epsg()))
+            raise Exception("AttitudePrjct point should has EPSG {} but has {}".format(self.epsg(), georef_attitude.posit.epsg()))
 
         if map_axis:
             if not isinstance(map_axis, Axis):
@@ -501,7 +522,7 @@ class LinearProfiler:
 
         # solution for current structural point
 
-        return Attitude(
+        return AttitudePrjct(
             id=georef_attitude.id,
             s=signed_distance_from_section_start,
             z=intersection_point_3d.z,
@@ -514,7 +535,7 @@ class LinearProfiler:
         self,
         structural_data: List[GeorefAttitude],
         mapping_method: dict,
-        height_source: Optional[GeoArray] = None) -> List[Optional[Attitude]]:
+        height_source: Optional[GeoArray] = None) -> List[Optional[AttitudePrjct]]:
         """
         Projects a set of georeferenced attitudes onto the section profile,
         optionally extracting point heights from a grid.
