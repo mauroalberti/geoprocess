@@ -25,58 +25,146 @@ class GeoProfile:
 
         """
 
-        self.scalar_profiles = ScalarProfiles()
-        self.attitudes = AttitudesPrjct()
-        self.lines_intersections = LinesIntersections()
-        self.polygons_intersections = PolygonsIntersections()
-        self.traces_projections = TracesProjections()
-        self.geosurfaces_ids = []
+        self._topo_profile = None
+        self._attitudes = None
+        self.lines_intersections = None
+        self.polygons_intersections = None
+        self.traces_projections = None
+        self.geosurfaces_ids = None
 
-    def add_scalar_profile(
-            self,
-            scalars_inters: ScalarProfile):
+    @property
+    def topo_profile(self):
+        """
+
+        :return:
+        """
+
+        return self._topo_profile
+
+    @topo_profile.setter
+    def topo_profile(self,
+        scalars_inters: TopographicProfile):
         """
 
         :param scalars_inters: the scalar values profiles.
-        :type scalars_inters: ScalarProfiles.
+        :type scalars_inters: TopographicProfile.
         :return:
 
         """
 
-        check_type(scalars_inters, "Scalars intersections", ScalarProfile)
-        self.scalar_profiles.append(scalars_inters)
+        check_type(scalars_inters, "Scalars intersections", TopographicProfile)
+        self._topo_profile = scalars_inters
 
-    def remove_last_profile(self):
-        """
-
-        :return:
-        """
-
-        del self.scalar_profiles[-1]
-
-    def clear_scalar_profiles(self):
+    def clear_topo_profile(self):
         """
 
         :return:
         """
 
-        self.scalar_profiles = ScalarProfiles()
+        self._topo_profile = None
 
-    def plot_scalar_profiles(self,
+    def plot_topo_profile(self,
+          aspect: Union[float, int] = 1,
+          width: Union[float, int] = 18.5,
+          height: Union[float, int] = 10.5,
+          color="blue"):
+        """
+        Plot a set of profiles with Matplotlib.
+
+        :param aspect: the plot aspect.
+        :type aspect: Union[float, int].
+        :param width: the plot width, in inches. # TOCHECK IF ALWAYS INCHES
+        :type width: Union[float, int].
+        :param height: the plot height in inches.  # TOCHECK IF ALWAYS INCHES
+        :type color: the color.
+        :param color: str.
+        :type height: Union[float, int].
+        :return: the figure.
+        :rtype:
+        """
+
+        fig, ax = plt.subplots()
+        fig.set_size_inches(width, height)
+
+        ax.set_aspect(aspect)
+
+        if self._topo_profile:
+            ax.plot(
+                self._topo_profile.s(),
+                self._topo_profile.z(),
+                color=color
+            )
+
+        self.fig = fig
+
+    @property
+    def attitudes(self):
+        """
+
+        :return:
+        """
+
+        return self._attitudes
+
+    @attitudes.setter
+    def attitudes(self,
+        prj_attitudes: PrjAttitudes):
+        """
+        Set the projected _attitudes content.
+
+        :param prj_attitudes: projected _attitudes.
+        :type prj_attitudes: PrjAttitudes.
+        :return:
+        """
+
+        check_type(prj_attitudes, "Projected _attitudes", List)
+        for el in prj_attitudes:
+            check_type(el, "Projected attitude", ProjctAttitude)
+
+        self._attitudes = prj_attitudes
+
+    def clear_attitudes(self):
+        """
+        Clear projected _attitudes content.
+
+        :return:
+        """
+
+        self._attitudes = None
+
+    def plot_attitudes(self, color="red"):
+        """
+
+        :return:
+        """
+
+        self.fig = self._attitudes.plot(
+            self.fig,
+            self.length_2d(),
+            color=color
+        )
+
+    def plot(self,
+             topo_profile=True,
+             attitudes=True,
+             line_intersections=True,
+             polygon_intersections=True,
+             line_projections=True,
+             topo_profile_color="blue",
+             attitudes_color="red",
+             line_intersections_color="orange",
              aspect: Union[float, int] = 1,
              width: Union[float, int] = 18.5,
-             height: Union[float, int] = 10.5):
+             height: Union[float, int] = 10.5,
+             ):
         """
-        Plot a set of profiles with Matplotlib.
 
-        :param aspect: the plot aspect.
-        :type aspect: Union[float, int].
-        :param width: the plot width, in inches. # TOCHECK IF ALWAYS INCHES
-        :type width: Union[float, int].
-        :param height: the plot height in inches.  # TOCHECK IF ALWAYS INCHES
-        :type height: Union[float, int].
-        :return: the figure.
-        :rtype:
+        :param topo_profile:
+        :param attitudes:
+        :param line_intersections:
+        :param polygon_intersections:
+        :param line_projections:
+        :return:
         """
 
         fig, ax = plt.subplots()
@@ -84,43 +172,19 @@ class GeoProfile:
 
         ax.set_aspect(aspect)
 
-        for profile in self.scalar_profiles:
+        if topo_profile and self._topo_profile:
             ax.plot(
-                profile.s(),
-                profile.z())
+                self._topo_profile.s(),
+                self._topo_profile.z(),
+                color=topo_profile_color
+            )
 
-    def plot_profiles(
-            self,
-            aspect: Union[float, int] = 1,
-            width: Union[float, int] = 18.5,
-            height: Union[float, int] = 10.5):
-        """
-        Deprecated. Use 'plot_scalar_profiles'
-
-        Plot a set of profiles with Matplotlib.
-
-        :param aspect: the plot aspect.
-        :type aspect: Union[float, int].
-        :param width: the plot width, in inches. # TOCHECK IF ALWAYS INCHES
-        :type width: Union[float, int].
-        :param height: the plot height in inches.  # TOCHECK IF ALWAYS INCHES
-        :type height: Union[float, int].
-        :return: the figure.
-        :rtype:
-        """
-
-        fig, ax = plt.subplots()
-        fig.set_size_inches(width, height)
-
-        ax.set_aspect(aspect)
-
-        s = profiles.s()
-
-        for z in profiles.zs():
-            if z:
-                ax.plot(s, z)
-
-        return fig
+        if attitudes and self._attitudes:
+            self._attitudes.plot(
+                fig,
+                self.length_2d(),
+                color=attitudes_color
+            )
 
     def add_intersections_pts(self, intersection_list):
         """
@@ -150,7 +214,7 @@ class GeoProfile:
         :rtype
         """
 
-        return [topoprofile.profile_s() for topoprofile in self.scalar_profiles]
+        return [topoprofile.profile_s() for topoprofile in self._topo_profile]
 
     def profiles_zs(self) -> List[float]:
         """
@@ -160,17 +224,17 @@ class GeoProfile:
         :rtype: list of float values.
         """
 
-        return [topoprofile.elevations() for topoprofile in self.scalar_profiles]
+        return [topoprofile.elevations() for topoprofile in self._topo_profile]
 
-    def profiles_lengths_2d(self) -> List[float]:
+    def length_2d(self) -> float:
         """
-        Returns the 2D lengths of the profiles.
+        Returns the 2D length of the profile.
 
-        :return: the 2D profiles lengths.
-        :rtype: list of float values.
+        :return: the 2D profile length.
+        :rtype: float.
         """
 
-        return [topoprofile.profile_length for topoprofile in self.scalar_profiles]
+        return self._topo_profile.profile_length()
 
     def profiles_lengths_3d(self) -> List[float]:
         """
@@ -180,7 +244,7 @@ class GeoProfile:
         :rtype: list of float values.
         """
 
-        return [topoprofile.profile_length_3d() for topoprofile in self.scalar_profiles]
+        return [topoprofile.profile_length_3d() for topoprofile in self._topo_profile]
 
     def minmax_length_2d(self) -> Tuple[Optional[float], Optional[float]]:
         """
@@ -190,7 +254,7 @@ class GeoProfile:
         :rtype: a pair of optional float values.
         """
 
-        lengths = self.profiles_lengths_2d()
+        lengths = self.length_2d()
 
         if lengths:
             return min(lengths), max(lengths)
@@ -205,7 +269,7 @@ class GeoProfile:
         :rtype: an optional float value.
         """
 
-        lengths = self.profiles_lengths_2d()
+        lengths = self.length_2d()
 
         if lengths:
             return max(lengths)
@@ -218,7 +282,7 @@ class GeoProfile:
         :return:
         """
 
-        topo_lines = [topo_profile.line for topo_profile in self.scalar_profiles]
+        topo_lines = [topo_profile.line for topo_profile in self._topo_profile]
         max_s = max(map(lambda line: line.length_2d(), topo_lines))
         min_z = min(map(lambda line: line.z_min(), topo_lines))
         max_z = max(map(lambda line: line.z_max(), topo_lines))
@@ -233,7 +297,7 @@ class GeoProfile:
         :rtype: list of dictionaries.
         """
 
-        return [topoprofile.elev_stats() for topoprofile in self.scalar_profiles]
+        return [topoprofile.elev_stats() for topoprofile in self._topo_profile]
 
     def slopes(self) -> List[List[Optional[float]]]:
         """
@@ -243,7 +307,7 @@ class GeoProfile:
         :rtype: list of list of topographic slopes.
         """
 
-        return [topoprofile.slopes() for topoprofile in self.scalar_profiles]
+        return [topoprofile.slopes() for topoprofile in self._topo_profile]
 
     def abs_slopes(self) -> List[List[Optional[float]]]:
         """
@@ -253,7 +317,7 @@ class GeoProfile:
         :rtype: list of list of topographic absolute slopes.
         """
 
-        return [topoprofile.abs_slopes() for topoprofile in self.scalar_profiles]
+        return [topoprofile.abs_slopes() for topoprofile in self._topo_profile]
 
     def slopes_stats(self) -> List[Dict]:
         """
@@ -264,7 +328,7 @@ class GeoProfile:
         :rtype: List of dictionaries.
         """
 
-        return [topoprofile.slopes_stats() for topoprofile in self.scalar_profiles]
+        return [topoprofile.slopes_stats() for topoprofile in self._topo_profile]
 
     def absslopes_stats(self) -> List[Dict]:
         """
@@ -275,7 +339,7 @@ class GeoProfile:
         :rtype: List of dictionaries.
         """
 
-        return [topoprofile.absslopes_stats() for topoprofile in self.scalar_profiles]
+        return [topoprofile.absslopes_stats() for topoprofile in self._topo_profile]
 
     def min_z_plane_attitudes(self):
         """
@@ -284,7 +348,7 @@ class GeoProfile:
         """
 
         # TODO:  manage case for possible nan p_z values
-        return min([plane_attitude.pt_3d.p_z for plane_attitude_set in self.attitudes for plane_attitude in
+        return min([plane_attitude.pt_3d.p_z for plane_attitude_set in self._attitudes for plane_attitude in
                     plane_attitude_set if 0.0 <= plane_attitude.sign_hor_dist <= self.max_s()])
 
     def max_z_plane_attitudes(self):
@@ -294,7 +358,7 @@ class GeoProfile:
         """
 
         # TODO:  manage case for possible nan p_z values
-        return max([plane_attitude.pt_3d.p_z for plane_attitude_set in self.attitudes for plane_attitude in
+        return max([plane_attitude.pt_3d.p_z for plane_attitude_set in self._attitudes for plane_attitude in
                     plane_attitude_set if 0.0 <= plane_attitude.sign_hor_dist <= self.max_s()])
 
     def min_z_curves(self):
@@ -323,7 +387,7 @@ class GeoProfile:
 
         """
 
-        return [topo_profile.elev_stats["min"] for topo_profile in self.scalar_profiles]
+        return [topo_profile.elev_stats["min"] for topo_profile in self._topo_profile]
 
     def maxs_z_topo(self) -> List[float]:
         """
@@ -332,7 +396,7 @@ class GeoProfile:
         :return:
         """
 
-        return [topo_profile.elev_stats["max"] for topo_profile in self.scalar_profiles]
+        return [topo_profile.elev_stats["max"] for topo_profile in self._topo_profile]
 
     def min_z_topo(self) -> Optional[float]:
         """
@@ -380,7 +444,7 @@ class GeoProfile:
 
         min_z = self.min_z_topo()
 
-        if len(self.attitudes) > 0:
+        if len(self._attitudes) > 0:
             min_z = min([min_z, self.min_z_plane_attitudes()])
 
         if len(self.traces_projections) > 0:
@@ -396,7 +460,7 @@ class GeoProfile:
 
         max_z = self.max_z_topo()
 
-        if len(self.attitudes) > 0:
+        if len(self._attitudes) > 0:
             max_z = max([max_z, self.max_z_plane_attitudes()])
 
         if len(self.traces_projections) > 0:
@@ -411,7 +475,7 @@ class GeoProfile:
         :return:
         """
 
-        self.attitudes.append(plane_attitudes)
+        self._attitudes.append(plane_attitudes)
 
     def add_curves(self, lMultilines, lIds):
         """
@@ -682,7 +746,7 @@ def plot_geoprofiles(geoprofiles, plot_addit_params, slope_padding=0.2):
                                                        axes_elevation,
                                                        line_intersection_value)
 
-        # plot geological attitudes intersections
+        # plot geological _attitudes intersections
 
         if len(geoprofile.geoplane_attitudes) > 0:
             for plane_attitude_set, color in zip(geoprofile.geoplane_attitudes, plot_addit_params["plane_attitudes_colors"]):

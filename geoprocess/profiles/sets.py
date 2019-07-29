@@ -12,8 +12,8 @@ class DrillsProjcts:
 
     pass
 
-
-class ScalarProfiles(list):
+'''
+class TopographicProfile(list):
     """
     Class storing a set (one or more) of scalar profiles.
 
@@ -27,7 +27,7 @@ class ScalarProfiles(list):
 
     def __init__(self):
 
-        super(ScalarProfiles, self).__init__()
+        super(TopographicProfile, self).__init__()
 
     def num_profiles(self) -> int:
         """
@@ -38,12 +38,12 @@ class ScalarProfiles(list):
         """
 
         return len(self)
-
+'''
 
 class ScalarsPrevious:
     """
 
-    Deprecated. Use class ScalarProfiles.
+    Deprecated. Use class TopographicProfile.
 
     Class storing a vertical topographic profile element.
     """
@@ -302,7 +302,7 @@ def plot_profile_polygon_intersection_line(plot_addit_params, axes, intersection
 
 
 def plot_profiles(
-        profiles: ScalarProfiles,
+        profiles: TopographicProfile,
         aspect: Union[float, int] = 1,
         width: Union[float, int] = 18.5,
         height: Union[float, int] = 10.5):
@@ -312,7 +312,7 @@ def plot_profiles(
     Optionally plot a set of profiles with Matplotlib.
 
     :param profiles: the profiles to plot.
-    :type profiles: ScalarProfiles
+    :type profiles: TopographicProfile
     :param aspect: the plot aspect.
     :type aspect: Union[float, int].
     :param width: the plot width, in inches. # TOCHECK IF ALWAYS INCHES

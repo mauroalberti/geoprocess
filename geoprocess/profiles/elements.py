@@ -4,7 +4,7 @@ from math import radians, sin, cos, sqrt
 from typing import Union
 
 
-class AttitudePrjct:
+class ProjctAttitude:
     """
     Represent a geological attitude projected onto a vertical profile.
     """

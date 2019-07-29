@@ -4,10 +4,10 @@ from typing import List, Optional, Tuple
 from array import array
 
 from ..types.utils import check_type
-from .elements import AttitudePrjct
+from .elements import ProjctAttitude
 
 
-class ScalarProfile():
+class TopographicProfile():
     """
 
     """
@@ -60,20 +60,26 @@ class ScalarProfile():
 
         return self._num_steps
 
+    def profile_length(self) -> float:
+        """
+        Returns the length of the profile.
 
-class AttitudesPrjct(list):
+        :return: length of profile.
+        :rtype: float.
+        """
 
-    def __init__(self):
+        return self.s()[-1]
 
-        super(AttitudesPrjct, self).__init__()
 
-    def add_attitudes(self, atts: List[AttitudePrjct]):
+class PrjAttitudes(list):
+
+    def __init__(self, atts: List[ProjctAttitude]):
 
         check_type(atts, "Attitude projections", List)
         for el in atts:
-            check_type(el, "Attitude projection", AttitudePrjct)
+            check_type(el, "Attitude projection", ProjctAttitude)
 
-        self.append(atts)
+        super(PrjAttitudes, self).__init__(atts)
 
     def plot(
             self,
@@ -96,7 +102,6 @@ class AttitudesPrjct(list):
         :rtype:
         """
 
-        print("Fig: {}".format(type(fig)))
         projected_z = [structural_attitude.z for structural_attitude in self if
                        0.0 <= structural_attitude.s <= section_length]
 
@@ -121,3 +126,5 @@ class AttitudesPrjct(list):
                     vertical_exaggeration)
 
                 fig.gca().plot(structural_segment_s, structural_segment_z, '-', color=color)
+
+        return fig

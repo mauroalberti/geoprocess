@@ -9,7 +9,7 @@ from pygsf.spatial.vectorial.geometries import *
 from geoprocess.profiles.profilers import LinearProfiler
 
 src_profile_shapefile_pth = "/home/mauro/Documents/projects/geoprocess/example_data/mt_alpi/profile.shp"
-attitudes_shape = "/home/mauro/Documents/projects/geoprocess/example_data/mt_alpi/attitudes.shp"
+attitudes_shape = "/home/mauro/Documents/projects/geoprocess/example_data/mt_alpi/_attitudes.shp"
 
 
 class TestProfiles(unittest.TestCase):
@@ -40,10 +40,10 @@ class TestProfiles(unittest.TestCase):
             attitude=Plane(090.00, +18.00))
 
         """
-        attitudes = geopandas.read_file(attitudes_shape)
+        _attitudes = geopandas.read_file(attitudes_shape)
 
-        attitudes = extract_georeferenced_attitudes(
-            geodataframe=attitudes,
+        _attitudes = extract_georeferenced_attitudes(
+            geodataframe=_attitudes,
             dip_dir_fldnm="dip_dir",
             dip_ang_fldnm="dip_ang")
         """
@@ -56,7 +56,7 @@ class TestProfiles(unittest.TestCase):
         mapping_method = {}
         mapping_method['method'] = 'nearest'
         att_projs = profiler.map_georef_attitudes_to_section(
-            structural_data=attitudes,
+            structural_data=_attitudes,
             mapping_method=mapping_method,
             height_source=geoarray)
         """

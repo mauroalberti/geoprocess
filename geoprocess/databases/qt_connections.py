@@ -58,7 +58,7 @@ def get_selected_recs_ids(selection_model: QItemSelectionModel, ndx_col: int=0) 
     :rtype: tuple of integers.
     """
 
-    # get selected records attitudes
+    # get selected records _attitudes
 
     selected_records_ids = selection_model.selectedRows(column=ndx_col)
 

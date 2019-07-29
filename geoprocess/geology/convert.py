@@ -15,7 +15,7 @@ def extract_georeferenced_attitudes(
         dip_ang_fldnm: str,
         id_fldnm: Optional[str] = None) -> List[Tuple[Point, Plane]]:
     """
-    Extracts the georeferenced attitudes from a geopandas GeoDataFrame instance representing point records.
+    Extracts the georeferenced _attitudes from a geopandas GeoDataFrame instance representing point records.
 
     :param geodataframe: the source geodataframe.
     :type geodataframe: GeoDataFrame.
