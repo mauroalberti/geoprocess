@@ -7,12 +7,12 @@ import numbers
 from geoprocess.stereonets.exceptions import *
 
 
-def rake_to_apsg_movsense(rake: [int, float]) -> Optional[int]:
+def rake_to_apsg_movsense(rake: numbers.Real) -> Optional[int]:
     """
     Convert rake to movement sense according to APSG convention.
 
     :param rake: the lineation rake angle, in decimal degrees
-    :type: int or float
+    :type: numbers.Real
     :return: 1 or -1, according to the APSG convention
     :rtype: int
     """

@@ -96,37 +96,37 @@ class ScalarsPrevious:
 
         return self._line.end_pt()
 
-    def profile_s(self) -> List[float]:
+    def profile_s(self) -> List[numbers.Real]:
         """
         Returns the incremental 2D lengths of a profile.
 
         :return: the incremental 2D lengths.
-        :rtype: list of float values.
+        :rtype: list of numbers.Real values.
         """
 
         return list(itertools.accumulate(self.horiz_dist_values))
 
-    def profile_length(self) -> float:
+    def profile_length(self) -> numbers.Real:
         """
         Returns the length of the profile.
 
         :return: length of profile.
-        :rtype: float.
+        :rtype: numbers.Real.
         """
 
         return self._line.length_2d()
 
-    def profile_length_3d(self) -> float:
+    def profile_length_3d(self) -> numbers.Real:
         """
         Returns the 3D length of the profile.
 
         :return: 3D length of profile.
-        :rtype: float.
+        :rtype: numbers.Real.
         """
 
         return self._line.length_3d()
 
-    def elevations(self) -> List[float]:
+    def elevations(self) -> List[numbers.Real]:
         """
         Returns the elevations of the profile.
 
@@ -146,7 +146,7 @@ class ScalarsPrevious:
 
         return self._line.z_stats()
 
-    def slopes(self) -> List[Optional[float]]:
+    def slopes(self) -> List[Optional[numbers.Real]]:
         """
         Returns the slopes of a topographic profile.
 
@@ -156,7 +156,7 @@ class ScalarsPrevious:
 
         return self._line.slopes()
 
-    def abs_slopes(self) -> List[Optional[float]]:
+    def abs_slopes(self) -> List[Optional[numbers.Real]]:
         """
         Returns the absolute slopes of a topographic profile.
 
@@ -202,7 +202,7 @@ class PolygonsIntersections:
     pass
 
 
-def profile_parameters(profile: Line) -> Tuple[List[float], List[float], List[float]]:
+def profile_parameters(profile: Line) -> Tuple[List[numbers.Real], List[numbers.Real], List[numbers.Real]]:
     """
     Calculates profile parameters for polar projections source datasets.
 
@@ -303,9 +303,9 @@ def plot_profile_polygon_intersection_line(plot_addit_params, axes, intersection
 
 def plot_profiles(
         profiles: TopographicProfile,
-        aspect: Union[float, int] = 1,
-        width: Union[float, int] = 18.5,
-        height: Union[float, int] = 10.5):
+        aspect: numbers.Real = 1,
+        width: numbers.Real = 18.5,
+        height: numbers.Real = 10.5):
     """
     Deprecated. Use inner method of Geoprofile class.
 
@@ -314,11 +314,11 @@ def plot_profiles(
     :param profiles: the profiles to plot.
     :type profiles: TopographicProfile
     :param aspect: the plot aspect.
-    :type aspect: Union[float, int].
+    :type aspect: numbers.Real.
     :param width: the plot width, in inches. # TOCHECK IF ALWAYS INCHES
-    :type width: Union[float, int].
+    :type width: numbers.Real.
     :param height: the plot height in inches.  # TOCHECK IF ALWAYS INCHES
-    :type height: Union[float, int].
+    :type height: numbers.Real.
     :return: the figure.
     :rtype:
     """

@@ -9,7 +9,7 @@ from math import acos
 from pygsf.geology.orientations import *
 from pygsf.spatial.rasters.geoarray import *
 
-from ..types.utils import check_type
+from ..types.utils import check_optional_type, check_type
 from ..geology.base import GeorefAttitude
 from .chains import *
 from .sets import *
@@ -24,7 +24,7 @@ class LinearProfiler:
     def __init__(self,
             start_pt: Point,
             end_pt: Point,
-            densify_distance: float):
+            densify_distance: numbers.Real):
         """
         Instantiates a 2D linear profile object.
         It is represented by two 2D points and by a densify distance.
@@ -34,14 +34,12 @@ class LinearProfiler:
         :param end_pt: the profile end point.
         :type end_pt: Point.
         :param densify_distance: the distance with which to densify the segment profile.
-        :type densify_distance: float or integer.
+        :type densify_distance: numbers.Real.
         """
 
-        if not isinstance(start_pt, Point):
-            raise Exception("Input start point must be a Point instance")
+        check_type(start_pt, "Input start point", Point)
 
-        if not isinstance(end_pt, Point):
-            raise Exception("Input end point must be a Point instance")
+        check_type(end_pt, "Input end point", Point)
 
         if start_pt.crs() != end_pt.crs():
             raise Exception("Both points must have same CRS")
@@ -49,8 +47,7 @@ class LinearProfiler:
         if start_pt.dist2DWith(end_pt) == 0.0:
             raise Exception("Input segment length cannot be zero")
 
-        if not isinstance(densify_distance, numbers.Real):
-            raise Exception("Input densify distance must be a real number")
+        check_type(densify_distance, "Input densify distance", numbers.Real)
 
         if not isfinite(densify_distance):
             raise Exception("Input densify distance must be finite")
@@ -85,12 +82,12 @@ class LinearProfiler:
 
         return self._end_pt.clone()
 
-    def densify_dist(self) -> float:
+    def densify_dist(self) -> numbers.Real:
         """
         Returns the densify distance of the profiler.
 
         :return: the densify distance of the profiler.
-        :rtype: float.
+        :rtype: numbers.Real.
         """
 
         return self._densify_dist
@@ -119,12 +116,12 @@ class LinearProfiler:
 
         return Crs(self._crs.epsg())
 
-    def epsg(self) -> int:
+    def epsg(self) -> numbers.Integral:
         """
         Returns the EPSG code of the profile.
 
         :return: the EPSG code of the profile.
-        :rtype: float.
+        :rtype: numbers.Real.
         """
 
         return self.crs().epsg()
@@ -139,12 +136,12 @@ class LinearProfiler:
 
         return Segment(start_pt=self._start_pt, end_pt=self._end_pt)
 
-    def length(self) -> float:
+    def length(self) -> numbers.Real:
         """
         Returns the length of the profiler section.
 
         :return: length of the profiler section.
-        :rtype: float.
+        :rtype: numbers.Real.
         """
 
         return self.segment().length_3d()
@@ -159,6 +156,16 @@ class LinearProfiler:
 
         return self.segment().vector()
 
+    def versor(self) -> Vect:
+        """
+        Returns the horizontal versor (unit vector) representing the profile.
+
+        :return: vector representing the profile.
+        :rtype: Vect.
+        """
+
+        return self.vector().versor()
+
     def densified_steps(self) -> array:
         """
         Returns an array made up by the incremental steps (2D distances) along the profile.
@@ -169,12 +176,12 @@ class LinearProfiler:
 
         return self.segment().densify2d_asSteps(self._densify_dist)
 
-    def num_pts(self) -> int:
+    def num_pts(self) -> numbers.Integral:
         """
         Returns the number of steps making up the profile.
 
         :return: number of steps making up the profile.
-        :rtype: int.
+        :rtype: numbers.Integral.
         """
 
         return len(self.densified_points())
@@ -201,13 +208,50 @@ class LinearProfiler:
 
     def normal_versor(self) -> Vect:
         """
-        Returns the perpendicular (horizontal) versor to the profiles (vertical) plane.
+        Returns the perpendicular (horizontal) versor to the profile (vertical) plane.
 
-        :return: the perpendicular (horizontal) versor to the profiles (vertical) plane.
+        :return: the perpendicular (horizontal) versor to the profile (vertical) plane.
         :rtype: Vect.
         """
 
         return self.vertical_plane().normVersor()
+
+    def left_norm_vers(self) -> Vect:
+        """
+        Returns the left horizontal normal versor.
+
+        :return: the left horizontal normal versor.
+        :rtype: Vect.
+        """
+
+        return Vect(0, 0, 1).vCross(self.versor()).versor()
+
+    def right_norm_vers(self) -> Vect:
+        """
+        Returns the right horizontal normal versor.
+
+        :return: the right horizontal normal versor.
+        :rtype: Vect.
+        """
+
+        return Vect(0, 0, -1).vCross(self.versor()).versor()
+
+    def left_offset(self,
+        offset: numbers.Real) -> 'LinearProfiler':
+        """
+        Returns a copy of the current linear profiler, offset to the left by the provided offset.
+
+        :param offset: the lateral offset to apply to create the new LinearProfiler.
+        :type: numbers.Real.
+        :return: the offset linear profiler.
+        :rtype: LinearProfiler
+        """
+
+        return LinearProfiler(
+            start_pt=self.start_pt().shiftByVect(self.left_norm_vers().scale(offset)),
+            end_pt=self.end_pt().shiftByVect(self.left_norm_vers().scale(offset)),
+            densify_distance=self.densify_dist()
+        )
 
     def point_in_profile(self, pt: Point) -> bool:
         """
@@ -222,14 +266,14 @@ class LinearProfiler:
 
         return self.vertical_plane().isPointInPlane(pt)
 
-    def point_distance(self, pt: Point) -> float:
+    def point_distance(self, pt: Point) -> numbers.Real:
         """
         Calcultes the point distance from the profiler plane.
 
         :param pt: the point to check.
         :type pt: Point.
         :return: the point distance from the profiler plane.
-        :rtype: float.
+        :rtype: numbers.Real.
         :raise; Exception.
         """
 
@@ -303,7 +347,7 @@ class LinearProfiler:
 
     def point_signed_s(
             self,
-            pt: Point) -> float:
+            pt: Point) -> numbers.Real:
         """
         Calculates the point signed distance from the profiles start.
         The projected point must already lay in the profile vertical plane, otherwise an exception is raised.
@@ -315,7 +359,7 @@ class LinearProfiler:
         :param pt: the point on the section.
         :type pt: Point.
         :return: the signed distance on the profile.
-        :rtype: float.
+        :rtype: numbers.Real.
         :raise: Exception.
         """
 
@@ -334,7 +378,7 @@ class LinearProfiler:
         return projected_vector.len3D * cos_alpha
 
     def get_intersection_slope(self,
-                intersection_vector: Vect) -> Tuple[float, str]:
+                intersection_vector: Vect) -> Tuple[numbers.Real, str]:
         """
         Calculates the slope (in radians) and the downward sense ('left', 'right' or 'vertical')
         for a profile-laying vector.
@@ -342,7 +386,7 @@ class LinearProfiler:
         :param intersection_vector: the profile-plane lying vector.
         :type intersection_vector: Vect,
         :return: the slope (in radians) and the downward sense.
-        :rtype: Tuple[float, str].
+        :rtype: Tuple[numbers.Real, str].
         :raise: Exception.
         """
 
@@ -601,6 +645,65 @@ class LinearProfiler:
         return PrjAttitudes(sorted(results, key=attrgetter('s')))
 
 
+class ParallLinearProfilers(list):
+    """
+    Parallel linear profilers.
+    """
+
+    def init(self,
+             base_profiler: LinearProfiler,
+             profs_num: numbers.Integral,
+             profs_offset: numbers.Real,
+             profs_arr: str = "central",  # one of: "left", "central", "right"
+             ):
+        """
+        Initialize the parallel linear profilers.
+
+        :param base_profiler: the base profiler.
+        :type base_profiler: LinearProfiler.
+        :param profs_num: the number of profilers to create.
+        :type profs_num: numbers.Integral.
+        :param profs_arr: profiles arrangement: one of left", "central", "right".
+        :type: str.
+        :return: the parallel linear profilers.
+        :type: ParallLinearProfilers.
+        :raise: Exception.
+
+        """
+
+        check_type(base_profiler, "Base profiler", LinearProfiler)
+
+        check_type(profs_num, "Profilers number", numbers.Integral)
+        if profs_num < 2:
+            raise Exception("Profilers number must be >= 2")
+
+        check_type(profs_arr, "Profilers arrangement", str)
+        if profs_arr not in ["central", "left", "right"]:
+            raise Exception("Profilers arrangement must be 'left', 'central' (default) or 'right'")
+
+        if profs_arr == "central" and profs_num % 2 != 1:
+            raise Exception("When profilers arrangement is 'central' profilers number must be odd")
+
+        if profs_arr == "central":
+
+            side_profs_num = profs_num // 2
+            num_left_profs = num_right_profs = side_profs_num
+
+        elif profs_arr == "left":
+
+            num_left_profs = profs_num -1
+            num_right_profs = 0
+
+        else:
+
+            num_right_profs = profs_num -1
+            num_left_profs = 0
+
+
+
+
+
+
 def calculate_profile_lines_intersection(multilines2d_list, id_list, profile_line2d):
     """
 
@@ -650,7 +753,7 @@ def intersection_distances_by_profile_start_list(profile_line, intersections):
     profile_segment2d = profile_segment2d_list[0]
 
     # determine distances for each position in intersection list
-    # creating a list of float values
+    # creating a list of numbers.Real values
     distance_from_profile_start_list = []
     for intersection in intersections:
         distance_from_profile_start_list.append(profile_segment2d.start_pt.dist2DWith(intersection[0]))

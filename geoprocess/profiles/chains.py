@@ -3,7 +3,7 @@ from typing import List, Optional, Tuple
 
 from array import array
 
-from ..types.utils import check_type
+from ..types.utils import check_optional_type, check_type
 from .elements import ProjctAttitude
 
 
@@ -60,12 +60,12 @@ class TopographicProfile():
 
         return self._num_steps
 
-    def profile_length(self) -> float:
+    def profile_length(self) -> numbers.Real:
         """
         Returns the length of the profile.
 
         :return: length of profile.
-        :rtype: float.
+        :rtype: numbers.Real.
         """
 
         return self.s()[-1]
@@ -84,8 +84,8 @@ class PrjAttitudes(list):
     def plot(
             self,
             fig,
-            section_length: float,
-            #vertical_exaggeration: Union[int, float] = 1.0,
+            section_length: numbers.Real,
+            #vertical_exaggeration: numbers.Real = 1.0,
             plot_addit_params=None,
             color='red'
     ):
@@ -93,7 +93,7 @@ class PrjAttitudes(list):
         :param fig: the figure in which to plot.
         :type fig:
         :param section_length: the length of the current section.
-        :type section_length: float.
+        :type section_length: numbers.Real.
         :param plot_addit_params:
         :param axes:
         :param section_length:

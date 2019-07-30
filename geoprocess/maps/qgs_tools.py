@@ -19,7 +19,7 @@ from pygsf.spatial.vectorial.geometries import Point, Segment, Line, MultiLine
 from pygsf.spatial.exceptions import VectorIOException
 
 
-def calculate_azimuth_correction(src_pt: Point, crs: QgsCoordinateReferenceSystem) -> float:
+def calculate_azimuth_correction(src_pt: Point, crs: QgsCoordinateReferenceSystem) -> numbers.Real:
     """
     Calculates the empirical azimuth correction (angle between y-axis direction and geographic North)
     for a given point.
@@ -29,7 +29,7 @@ def calculate_azimuth_correction(src_pt: Point, crs: QgsCoordinateReferenceSyste
     :param crs: the considered coordinate reference system.
     :type crs: QgsCoordinateReferenceSystem.
     :return: the azimuth angle.
-    :rtype: float.
+    :rtype: numbers.Real.
     """
 
     # Calculates dip direction correction with respect to project CRS y-axis orientation
@@ -353,7 +353,7 @@ def lyr_attrs(layer, fields: List) -> List:
     return rec_list
 
 
-def ptlyr_geoms_attrs(pt_layer, fields=None) -> Tuple[List[Tuple[float, float]], List]:
+def ptlyr_geoms_attrs(pt_layer, fields=None) -> Tuple[List[Tuple[numbers.Real, numbers.Real]], List]:
     """
     Extract geometry and attribute informatiion from a point layer.
 
@@ -564,14 +564,14 @@ def raster_qgis_params(raster_layer):
     return name, cellsizeEW, cellsizeNS, rows, cols, xMin, xMax, yMin, yMax, nodatavalue, crs    
 
 
-def qgs_point(x: float, y: float) -> QgsPointXY:
+def qgs_point(x: numbers.Real, y: numbers.Real) -> QgsPointXY:
     """
     Creates a QgsPointXY instance from x-y coordinates.
 
     :param x: the x coordinate.
-    :type x: float.
+    :type x: numbers.Real.
     :param y: the y coordinate.
-    :type y: float.
+    :type y: numbers.Real.
     :return: the QgsPointXY instance.
     :rtype: QgsPointXY instance.
     """
@@ -579,14 +579,14 @@ def qgs_point(x: float, y: float) -> QgsPointXY:
     return QgsPointXY(x, y)
 
 
-def explode_pt(qgs_pt: QgsPointXY) -> Tuple[float, float]:
+def explode_pt(qgs_pt: QgsPointXY) -> Tuple[numbers.Real, numbers.Real]:
     """
     Returns the x and y coordinates of a QgsPointXY.
 
     :param qgs_pt: a point.
     :type qgs_pt: QgsPointXY instance.
     :return: the x and y pair.
-    :rtype: tuple of two float values.
+    :rtype: tuple of two numbers.Real values.
     """
 
     return qgs_pt.x(), qgs_pt.y()
@@ -628,21 +628,21 @@ def qgs_project_point(qgsPt: QgsPointXY, srcCrs: QgsCoordinateReferenceSystem = 
     return prj_pt
 
 
-def qgs_project_xy(x: float, y: float, srcCrs: QgsCoordinateReferenceSystem = None, destCrs:Optional[QgsCoordinateReferenceSystem] = None) -> Tuple[float, float]:
+def qgs_project_xy(x: numbers.Real, y: numbers.Real, srcCrs: QgsCoordinateReferenceSystem = None, destCrs:Optional[QgsCoordinateReferenceSystem] = None) -> Tuple[numbers.Real, numbers.Real]:
     """
     Project a pair of x-y coordinates to a new projection.
     If the source/destination CRS is not provided, it will be set to EPSG 4236 (WGS-84).
 
     :param x: the x coordinate.
-    :type x: float.
+    :type x: numbers.Real.
     :param y: the y coordinate.
-    :type y: float.
+    :type y: numbers.Real.
     :param srcCrs: the source coordinate.
     :type srcCrs: QgsCoordinateReferenceSystem.
     :param destCrs: the destination coordinate.
     :type destCrs: QgsCoordinateReferenceSystem.
     :return: the projected x-y coordinates.
-    :rtype: tuple of two float values.
+    :rtype: tuple of two numbers.Real values.
     """
 
     if not srcCrs:
@@ -777,7 +777,7 @@ def interpolate_bilinear(dem, qrpDemParams, point):
     :param dem: qgis._core.QgsRasterLayer
     :param qrpDemParams: qProf.gis_utils.qgs_tools.QGisRasterParameters
     :param point: qProf.gis_utils.features.Point
-    :return: float
+    :return: numbers.Real
     """
 
     dArrayCoords = qrpDemParams.geogr2raster(point)

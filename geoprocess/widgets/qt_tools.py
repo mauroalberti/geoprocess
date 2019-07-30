@@ -103,7 +103,7 @@ def update_combo_box(combobox: QComboBox, init_text: str, texts: List[str]):
     combobox.addItems(texts)
 
 
-def qcolor2rgbmpl(qcolor: QColor) -> Tuple[float, float, float]:
+def qcolor2rgbmpl(qcolor: QColor) -> Tuple[numbers.Real, numbers.Real, numbers.Real]:
     """
     Calculates the red, green and blue components of the given QColor instance.
 

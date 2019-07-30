@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from pygsf.geology.orientations import *
 
 from .chains import *
-from ..types.utils import check_type
+from ..types.utils import check_optional_type, check_type
 from ..widgets.mpl_widget import MplWidget
 
 from .sets import *
@@ -64,21 +64,21 @@ class GeoProfile:
         self._topo_profile = None
 
     def plot_topo_profile(self,
-          aspect: Union[float, int] = 1,
-          width: Union[float, int] = 18.5,
-          height: Union[float, int] = 10.5,
+          aspect: numbers.Real = 1,
+          width: numbers.Real = 18.5,
+          height: numbers.Real = 10.5,
           color="blue"):
         """
         Plot a set of profiles with Matplotlib.
 
         :param aspect: the plot aspect.
-        :type aspect: Union[float, int].
+        :type aspect: numbers.Real.
         :param width: the plot width, in inches. # TOCHECK IF ALWAYS INCHES
-        :type width: Union[float, int].
+        :type width: numbers.Real.
         :param height: the plot height in inches.  # TOCHECK IF ALWAYS INCHES
         :type color: the color.
         :param color: str.
-        :type height: Union[float, int].
+        :type height: numbers.Real.
         :return: the figure.
         :rtype:
         """
@@ -153,9 +153,9 @@ class GeoProfile:
              topo_profile_color="blue",
              attitudes_color="red",
              line_intersections_color="orange",
-             aspect: Union[float, int] = 1,
-             width: Union[float, int] = 18.5,
-             height: Union[float, int] = 10.5,
+             aspect: numbers.Real = 1,
+             width: numbers.Real = 18.5,
+             height: numbers.Real = 10.5,
              ):
         """
 
@@ -206,7 +206,7 @@ class GeoProfile:
 
         self.polygons_intersections = zip(formation_list, intersection_line3d_list, intersection_polygon_s_list2)
 
-    def profiles_svals(self) -> List[List[float]]:
+    def profiles_svals(self) -> List[List[numbers.Real]]:
         """
         Returns the list of the s values for the profiles.
 
@@ -216,42 +216,42 @@ class GeoProfile:
 
         return [topoprofile.profile_s() for topoprofile in self._topo_profile]
 
-    def profiles_zs(self) -> List[float]:
+    def profiles_zs(self) -> List[numbers.Real]:
         """
         Returns the elevations of the profiles.
 
         :return: the elevations.
-        :rtype: list of float values.
+        :rtype: list of numbers.Real values.
         """
 
         return [topoprofile.elevations() for topoprofile in self._topo_profile]
 
-    def length_2d(self) -> float:
+    def length_2d(self) -> numbers.Real:
         """
         Returns the 2D length of the profile.
 
         :return: the 2D profile length.
-        :rtype: float.
+        :rtype: numbers.Real.
         """
 
         return self._topo_profile.profile_length()
 
-    def profiles_lengths_3d(self) -> List[float]:
+    def profiles_lengths_3d(self) -> List[numbers.Real]:
         """
         Returns the 3D lengths of the profiles.
 
         :return: the 3D profiles lengths.
-        :rtype: list of float values.
+        :rtype: list of numbers.Real values.
         """
 
         return [topoprofile.profile_length_3d() for topoprofile in self._topo_profile]
 
-    def minmax_length_2d(self) -> Tuple[Optional[float], Optional[float]]:
+    def minmax_length_2d(self) -> Tuple[Optional[numbers.Real], Optional[numbers.Real]]:
         """
         Returns the maximum 2D length of profiles.
 
         :return: the minimum and maximum profiles lengths.
-        :rtype: a pair of optional float values.
+        :rtype: a pair of optional numbers.Real values.
         """
 
         lengths = self.length_2d()
@@ -261,12 +261,12 @@ class GeoProfile:
         else:
             return None, None
 
-    def max_length_2d(self) -> Optional[float]:
+    def max_length_2d(self) -> Optional[numbers.Real]:
         """
         Returns the maximum 2D length of profiles.
 
         :return: the maximum profiles lengths.
-        :rtype: an optional float value.
+        :rtype: an optional numbers.Real value.
         """
 
         lengths = self.length_2d()
@@ -299,7 +299,7 @@ class GeoProfile:
 
         return [topoprofile.elev_stats() for topoprofile in self._topo_profile]
 
-    def slopes(self) -> List[List[Optional[float]]]:
+    def slopes(self) -> List[List[Optional[numbers.Real]]]:
         """
         Returns a list of the slopes of the topographic profiles in the geoprofile.
 
@@ -309,7 +309,7 @@ class GeoProfile:
 
         return [topoprofile.slopes() for topoprofile in self._topo_profile]
 
-    def abs_slopes(self) -> List[List[Optional[float]]]:
+    def abs_slopes(self) -> List[List[Optional[numbers.Real]]]:
         """
         Returns a list of the absolute slopes of the topographic profiles in the geoprofile.
 
@@ -379,7 +379,7 @@ class GeoProfile:
         return max([pt_2d.p_y for multiline_2d_list in self.traces_projections for multiline_2d in multiline_2d_list for line_2d in
                     multiline_2d.lines for pt_2d in line_2d.pts if 0.0 <= pt_2d.p_x <= self.max_s()])
 
-    def mins_z_topo(self) -> List[float]:
+    def mins_z_topo(self) -> List[numbers.Real]:
         """
         Returns a list of elevation minimums in the topographic profiles.
 
@@ -389,7 +389,7 @@ class GeoProfile:
 
         return [topo_profile.elev_stats["min"] for topo_profile in self._topo_profile]
 
-    def maxs_z_topo(self) -> List[float]:
+    def maxs_z_topo(self) -> List[numbers.Real]:
         """
         Returns a list of elevation maximums in the topographic profiles.
 
@@ -398,12 +398,12 @@ class GeoProfile:
 
         return [topo_profile.elev_stats["max"] for topo_profile in self._topo_profile]
 
-    def min_z_topo(self) -> Optional[float]:
+    def min_z_topo(self) -> Optional[numbers.Real]:
         """
         Returns the minimum elevation value in the topographic profiles.
 
         :return: the minimum elevation value in the profiles.
-        :rtype: optional float.
+        :rtype: optional numbers.Real.
         """
 
         mins_z = self.mins_z_topo()
@@ -412,12 +412,12 @@ class GeoProfile:
         else:
             return None
 
-    def max_z_topo(self) -> Optional[float]:
+    def max_z_topo(self) -> Optional[numbers.Real]:
         """
         Returns the maximum elevation value in the topographic profiles.
 
         :return: the maximum elevation value in the profiles.
-        :rtype: optional float.
+        :rtype: optional numbers.Real.
         """
 
         maxs_z = self.maxs_z_topo()
@@ -426,7 +426,7 @@ class GeoProfile:
         else:
             return None
 
-    def natural_elev_range(self) -> Tuple[float, float]:
+    def natural_elev_range(self) -> Tuple[numbers.Real, numbers.Real]:
         """
         Returns the elevation range of the profiles.
 
@@ -489,7 +489,7 @@ class GeoProfile:
         self.geosurfaces_ids.append(lIds)
 
 
-class GeoProfilesSet:
+class GeoProfileSet:
     """
     Represents a set of Geoprofile elements,
     stored as a list
@@ -597,10 +597,10 @@ class TopoProfiles(object):
                  crs_authid: str,
                  profile_source: str,
                  source_names: List[str],
-                 xs: List[float],
-                 ys: List[float],
-                 zs: List[List[float]],
-                 times: List[float],
+                 xs: List[numbers.Real],
+                 ys: List[numbers.Real],
+                 zs: List[List[numbers.Real]],
+                 times: List[numbers.Real],
                  inverted: bool):
 
         self.crs_authid = crs_authid
@@ -630,15 +630,15 @@ class TopoProfiles(object):
 
         return len(self.xs)
 
-    def max_s(self) -> float:
+    def max_s(self) -> numbers.Real:
 
         return self.profile_s[-1]
 
-    def min_z(self) -> float:
+    def min_z(self) -> numbers.Real:
 
         return float(min([np.nanmin(prof_elev) for prof_elev in self.profiles_elevs]))
 
-    def max_z(self) -> float:
+    def max_z(self) -> numbers.Real:
 
         return float(max([np.nanmax(prof_elev) for prof_elev in self.profiles_elevs]))
 

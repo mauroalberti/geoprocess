@@ -12,25 +12,25 @@ class ProjctAttitude:
     def __init__(
         self,
         id: int,
-        s: float,
-        z: float,
-        slope_degr: float,
+        s: numbers.Real,
+        z: numbers.Real,
+        slope_degr: numbers.Real,
         down_sense: str,
-        dist: float
+        dist: numbers.Real
 ):
         """
         :param id: the identifier of the observation.
         :type id: int.
         :param s: the signed horizontal distance along the profile.
-        :type s: float (note: may exceed a profile range, both before, negative values, or after its end.
+        :type s: numbers.Real (note: may exceed a profile range, both before, negative values, or after its end.
         :param z: the height of the attitude in the profile.
-        :type z: float.
+        :type z: numbers.Real.
         :param slope_degr: the slope of the attitude in the profile. Unit is degrees.
-        :type slope_degr: float.
+        :type slope_degr: numbers.Real.
         :param down_sense: downward sense, to the right or to the profile left.
         :type down_sense: str.
         :param dist: the distance between the attitude point and the point projection on the profile.
-        :type: dist: float
+        :type: dist: numbers.Real
         """
 
         self.id = id
@@ -59,9 +59,9 @@ class ProjctAttitude:
 
     def plot_segment(
             self,
-            profile_length: Union[int, float],
-            vertical_exaggeration: Union[int, float] = 1,
-            segment_scale_factor: float = 70.0):
+            profile_length: numbers.Real,
+            vertical_exaggeration: numbers.Real = 1,
+            segment_scale_factor: numbers.Real = 70.0):
         """
 
         :param profile_length:

@@ -6,7 +6,7 @@ from pygsf.spatial.vectorial.geometries import Line
 from pygsf.spatial.rasters.geoarray import GeoArray
 
 
-def plot_grid(geo_array: GeoArray, level_ndx: int = 0, cmap="jet", width: float = 18.5, height: float = 10.5) -> Figure:
+def plot_grid(geo_array: GeoArray, level_ndx: int = 0, cmap="jet", width: numbers.Real = 18.5, height: numbers.Real = 10.5) -> Figure:
     """
     Plot a grid with geographic coordinates.
 
@@ -17,9 +17,9 @@ def plot_grid(geo_array: GeoArray, level_ndx: int = 0, cmap="jet", width: float 
     :param cmap: the colormap to apply.
     :type cmap: basestring.
     :param width: figure width in inches.
-    :type width: float.
+    :type width: numbers.Real.
     :param height: figure height in inches.
-    :type height: float.
+    :type height: numbers.Real.
     :return: Figure.
     :raise: Exception when grid has rotation.
 

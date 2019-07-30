@@ -217,7 +217,7 @@ def shapefile_create(path, geom_type, fields_dict_list, crs=None):
     return outShapefile, outShapelayer
 
 
-def try_write_pt_shapefile(point_layer, geoms: List[Tuple[float, float, float]], field_names: List[str], attrs: List[Tuple]) -> Tuple[bool, str]:
+def try_write_pt_shapefile(point_layer, geoms: List[Tuple[numbers.Real, numbers.Real, numbers.Real]], field_names: List[str], attrs: List[Tuple]) -> Tuple[bool, str]:
     """
     Add point records in an existing shapefile, filling attribute values.
 
