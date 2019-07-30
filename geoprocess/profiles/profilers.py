@@ -2,16 +2,13 @@
 from typing import List
 from operator import attrgetter
 
-import numbers
-
 from math import acos
 
 from pygsf.geology.orientations import *
 from pygsf.spatial.rasters.geoarray import *
 
-from ..types.utils import check_optional_type, check_type
 from ..geology.base import GeorefAttitude
-from .chains import *
+
 from .sets import *
 
 
@@ -126,6 +123,20 @@ class LinearProfiler:
 
         return self.crs().epsg()
 
+    def clone(self) -> 'LinearProfiler':
+        """
+        Returns a deep copy of the current linear profiler.
+
+        :return: a deep copy of the current linear profiler.
+        :rtype: LinearProfiler.
+        """
+
+        return LinearProfiler(
+            start_pt=self.start_pt().clone(),
+            end_pt=self.end_pt().clone(),
+            densify_distance=self.densify_dist()
+        )
+
     def segment(self) -> Segment:
         """
         Returns the horizontal segment representing the profile.
@@ -224,7 +235,7 @@ class LinearProfiler:
         :rtype: Vect.
         """
 
-        return Vect(0, 0, 1).vCross(self.versor()).versor()
+        return Vect(0, 0, 1, epsg_cd=self.epsg()).vCross(self.versor()).versor()
 
     def right_norm_vers(self) -> Vect:
         """
@@ -234,12 +245,12 @@ class LinearProfiler:
         :rtype: Vect.
         """
 
-        return Vect(0, 0, -1).vCross(self.versor()).versor()
+        return Vect(0, 0, -1, epsg_cd=self.epsg()).vCross(self.versor()).versor()
 
     def left_offset(self,
         offset: numbers.Real) -> 'LinearProfiler':
         """
-        Returns a copy of the current linear profiler, offset to the left by the provided offset.
+        Returns a copy of the current linear profiler, offset to the left by the provided offset distance.
 
         :param offset: the lateral offset to apply to create the new LinearProfiler.
         :type: numbers.Real.
@@ -250,6 +261,23 @@ class LinearProfiler:
         return LinearProfiler(
             start_pt=self.start_pt().shiftByVect(self.left_norm_vers().scale(offset)),
             end_pt=self.end_pt().shiftByVect(self.left_norm_vers().scale(offset)),
+            densify_distance=self.densify_dist()
+        )
+
+    def right_offset(self,
+        offset: numbers.Real) -> 'LinearProfiler':
+        """
+        Returns a copy of the current linear profiler, offset to the right by the provided offset distance.
+
+        :param offset: the lateral offset to apply to create the new LinearProfiler.
+        :type: numbers.Real.
+        :return: the offset linear profiler.
+        :rtype: LinearProfiler
+        """
+
+        return LinearProfiler(
+            start_pt=self.start_pt().shiftByVect(self.right_norm_vers().scale(offset)),
+            end_pt=self.end_pt().shiftByVect(self.right_norm_vers().scale(offset)),
             densify_distance=self.densify_dist()
         )
 
@@ -645,17 +673,32 @@ class LinearProfiler:
         return PrjAttitudes(sorted(results, key=attrgetter('s')))
 
 
-class ParallLinearProfilers(list):
+class ParallelProfilers(list):
     """
     Parallel linear profilers.
     """
 
     def init(self,
-             base_profiler: LinearProfiler,
-             profs_num: numbers.Integral,
-             profs_offset: numbers.Real,
-             profs_arr: str = "central",  # one of: "left", "central", "right"
-             ):
+        profilers: List[LinearProfiler]):
+        """
+
+        :param profilers:
+        :return:
+        """
+
+        check_type(profilers, "Profilers", List)
+        for el in profilers:
+            check_type(el, "Profiler", LinearProfiler)
+
+        super(ParallelProfilers, self).__init__(profilers)
+
+    @classmethod
+    def fromProfiler(cls,
+         base_profiler: LinearProfiler,
+         profs_num: numbers.Integral,
+         profs_offset: numbers.Real,
+         profs_arr: str = "central",  # one of: "left", "central", "right"
+         ):
         """
         Initialize the parallel linear profilers.
 
@@ -663,10 +706,12 @@ class ParallLinearProfilers(list):
         :type base_profiler: LinearProfiler.
         :param profs_num: the number of profilers to create.
         :type profs_num: numbers.Integral.
+        :param profs_offset: the lateral offset between profilers.
+        :type profs_offset: numbers.Real.
         :param profs_arr: profiles arrangement: one of left", "central", "right".
         :type: str.
         :return: the parallel linear profilers.
-        :type: ParallLinearProfilers.
+        :type: ParallelProfilers.
         :raise: Exception.
 
         """
@@ -699,9 +744,34 @@ class ParallLinearProfilers(list):
             num_right_profs = profs_num -1
             num_left_profs = 0
 
+        profilers = []
 
+        for i in range(num_left_profs, 0, -1):
 
+            current_offset = profs_offset * i
 
+            profilers.append(base_profiler.left_offset(offset=current_offset))
+
+        profilers.append(base_profiler.clone())
+
+        for i in range(1, num_right_profs + 1):
+
+            current_offset = profs_offset * i
+
+            profilers.append(base_profiler.right_offset(offset=current_offset))
+
+        return cls(profilers)
+
+    def __repr__(self) -> str:
+        """
+        Represents a parallel linear profilers set.
+
+        :return: the textual representation of the parallel linear profiler set.
+        :rtype: str.
+        """
+
+        inner_profilers = "\n".join([repr(profiler) for profiler in self])
+        return "ParallelProfilers([\n{}]\n)".format(inner_profilers)
 
 
 def calculate_profile_lines_intersection(multilines2d_list, id_list, profile_line2d):

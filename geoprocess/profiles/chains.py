@@ -1,9 +1,11 @@
 
-from typing import List, Optional, Tuple
+from typing import List
+
+import numbers
 
 from array import array
 
-from ..types.utils import check_optional_type, check_type
+from ..types.utils import check_type
 from .elements import ProjctAttitude
 
 
@@ -95,7 +97,6 @@ class PrjAttitudes(list):
         :param section_length: the length of the current section.
         :type section_length: numbers.Real.
         :param plot_addit_params:
-        :param axes:
         :param section_length:
         :param color:
         :return: the figure.

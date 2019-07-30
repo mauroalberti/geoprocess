@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from typing import Any, Tuple, Dict, Optional, Union
+import numbers
 
 import os
 
@@ -10,7 +11,6 @@ import numpy as np
 
 import gdal
 
-from pygsf.defaults.types import Number
 from pygsf.mathematics.scalars import areClose
 from pygsf.spatial.rasters.geoarray import GeoArray
 from pygsf.spatial.rasters.geotransform import GeoTransform
@@ -177,7 +177,7 @@ def read_raster_band(raster_source: str, bnd_ndx: int = 1, epsg_cd: int = -1) ->
         return None
 
 
-def try_write_esrigrid(geoarray: GeoArray, outgrid_flpth: str, esri_nullvalue: Number=GRID_NULL_VALUE, level_ndx: int=0) -> Tuple[bool, str]:
+def try_write_esrigrid(geoarray: GeoArray, outgrid_flpth: str, esri_nullvalue: numbers.Real=GRID_NULL_VALUE, level_ndx: int=0) -> Tuple[bool, str]:
     """
     Writes ESRI ascii grid.
     

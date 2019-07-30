@@ -1,7 +1,8 @@
 
+import numbers
 
 from math import radians, sin, cos, sqrt
-from typing import Union
+
 
 
 class ProjctAttitude:

@@ -2,6 +2,8 @@
 
 from typing import Dict, Tuple, Union, List, Optional
 
+import numbers
+
 import os
 
 from osgeo import ogr, osr

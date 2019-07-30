@@ -1,14 +1,7 @@
 
-from typing import Optional
-
 from matplotlib import gridspec
 import matplotlib.pyplot as plt
 
-
-from pygsf.geology.orientations import *
-
-from .chains import *
-from ..types.utils import check_optional_type, check_type
 from ..widgets.mpl_widget import MplWidget
 
 from .sets import *
