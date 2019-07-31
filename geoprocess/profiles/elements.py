@@ -4,8 +4,7 @@ import numbers
 from math import radians, sin, cos, sqrt
 
 
-
-class ProjctAttitude:
+class Attitude:
     """
     Represent a geological attitude projected onto a vertical profile.
     """
@@ -18,7 +17,7 @@ class ProjctAttitude:
         slope_degr: numbers.Real,
         down_sense: str,
         dist: numbers.Real
-):
+    ):
         """
         :param id: the identifier of the observation.
         :type id: int.
@@ -105,8 +104,18 @@ class ProjctAttitude:
         return structural_segment_s, structural_segment_z
 
 
-class DrillProjct:
+class LineIntersection:
+    """
 
-    pass
+    """
 
+    def __init__(
+        self,
+        id: int,
+        s: numbers.Real,
+        z: numbers.Real
+    ):
 
+        self.id = id
+        self.s = s
+        self.z = z

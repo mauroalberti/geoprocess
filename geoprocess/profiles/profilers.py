@@ -486,13 +486,13 @@ class LinearProfiler:
         """
 
         if not isinstance(attitude_plane, Plane):
-            raise Exception("ProjctAttitude plane should be Plane but is {}".format(type(attitude_plane)))
+            raise Exception("Attitude plane should be Plane but is {}".format(type(attitude_plane)))
 
         if not isinstance(attitude_pt, Point):
-            raise Exception("ProjctAttitude point should be Point but is {}".format(type(attitude_pt)))
+            raise Exception("Attitude point should be Point but is {}".format(type(attitude_pt)))
 
         if self.crs() != attitude_pt.crs():
-            raise Exception("ProjctAttitude point should has EPSG {} but has {}".format(self.epsg(), attitude_pt.epsg()))
+            raise Exception("Attitude point should has EPSG {} but has {}".format(self.epsg(), attitude_pt.epsg()))
 
         putative_inters_versor = self.vertical_plane().intersVersor(attitude_plane.toCPlane(attitude_pt))
 
@@ -518,7 +518,7 @@ class LinearProfiler:
             raise Exception("georef_attitude point should be GeorefAttitude but is {}".format(type(georef_attitude)))
 
         if self.crs() != georef_attitude.posit.crs():
-            raise Exception("ProjctAttitude point should has EPSG {} but has {}".format(self.epsg(), georef_attitude.posit.epsg()))
+            raise Exception("Attitude point should has EPSG {} but has {}".format(self.epsg(), georef_attitude.posit.epsg()))
 
         attitude_cplane = georef_attitude.attitude.toCPlane(georef_attitude.posit)
         intersection_versor = self.vertical_plane().intersVersor(attitude_cplane)
@@ -538,7 +538,7 @@ class LinearProfiler:
     def map_attitude_to_section(
             self,
             georef_attitude: GeorefAttitude,
-            map_axis: Optional[Axis] = None) -> Optional[ProjctAttitude]:
+            map_axis: Optional[Axis] = None) -> Optional[Attitude]:
         """
         Project a georeferenced attitude to the section.
 
@@ -554,7 +554,7 @@ class LinearProfiler:
             raise Exception("Georef attitude should be GeorefAttitude but is {}".format(type(georef_attitude)))
 
         if self.crs() != georef_attitude.posit.crs():
-            raise Exception("ProjctAttitude point should has EPSG {} but has {}".format(self.epsg(), georef_attitude.posit.epsg()))
+            raise Exception("Attitude point should has EPSG {} but has {}".format(self.epsg(), georef_attitude.posit.epsg()))
 
         if map_axis:
             if not isinstance(map_axis, Axis):
@@ -594,7 +594,7 @@ class LinearProfiler:
 
         # solution for current structural point
 
-        return ProjctAttitude(
+        return Attitude(
             id=georef_attitude.id,
             s=signed_distance_from_section_start,
             z=intersection_point_3d.z,
@@ -607,7 +607,7 @@ class LinearProfiler:
         self,
         structural_data: List[GeorefAttitude],
         mapping_method: dict,
-        height_source: Optional[GeoArray] = None) -> List[Optional[ProjctAttitude]]:
+        height_source: Optional[GeoArray] = None) -> List[Optional[Attitude]]:
         """
         Projects a set of georeferenced _attitudes onto the section profile,
         optionally extracting point heights from a grid.
@@ -670,7 +670,7 @@ class LinearProfiler:
                 except:
                     continue
 
-        return PrjAttitudes(sorted(results, key=attrgetter('s')))
+        return Attitudes(sorted(results, key=attrgetter('s')))
 
 
 class ParallelProfilers(list):
@@ -678,7 +678,7 @@ class ParallelProfilers(list):
     Parallel linear profilers.
     """
 
-    def init(self,
+    def __init__(self,
         profilers: List[LinearProfiler]):
         """
 
@@ -772,6 +772,27 @@ class ParallelProfilers(list):
 
         inner_profilers = "\n".join([repr(profiler) for profiler in self])
         return "ParallelProfilers([\n{}]\n)".format(inner_profilers)
+
+    def profile_grid(
+            self,
+            geoarray: GeoArray) -> List[TopographicProfile]:
+        """
+        Create profile from one geoarray.
+
+        :param geoarray: the source geoarray.
+        :type geoarray: GeoArray.
+        :return: list of profiles of the scalar variable stored in the geoarray.
+        :rtype: List[TopographicProfile].
+        :raise: Exception.
+        """
+
+        topo_profiles = []
+
+        for profiler in self:
+
+            topo_profiles.append(profiler.profile_grid(geoarray))
+
+        return topo_profiles
 
 
 def calculate_profile_lines_intersection(multilines2d_list, id_list, profile_line2d):

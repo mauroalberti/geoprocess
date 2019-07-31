@@ -6,7 +6,7 @@ import numbers
 from array import array
 
 from ..types.utils import check_type
-from .elements import ProjctAttitude
+from .elements import *
 
 
 class TopographicProfile():
@@ -73,15 +73,15 @@ class TopographicProfile():
         return self.s()[-1]
 
 
-class PrjAttitudes(list):
+class Attitudes(list):
 
-    def __init__(self, atts: List[ProjctAttitude]):
+    def __init__(self, atts: List[Attitude]):
 
         check_type(atts, "Attitude projections", List)
         for el in atts:
-            check_type(el, "Attitude projection", ProjctAttitude)
+            check_type(el, "Attitude projection", Attitude)
 
-        super(PrjAttitudes, self).__init__(atts)
+        super(Attitudes, self).__init__(atts)
 
     def plot(
             self,
@@ -129,3 +129,19 @@ class PrjAttitudes(list):
                 fig.gca().plot(structural_segment_s, structural_segment_z, '-', color=color)
 
         return fig
+
+
+class LinesIntersections:
+
+    def __init__(self, atts: List[LineIntersection]):
+
+        check_type(atts, "Lines intersections", List)
+        for el in atts:
+            check_type(el, "Lines intersections", LineIntersection)
+
+        super(LinesIntersections, self).__init__(atts)
+
+
+class PolygonsIntersections:
+
+    pass

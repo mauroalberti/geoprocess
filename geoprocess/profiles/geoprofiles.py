@@ -8,22 +8,38 @@ from .sets import *
 
 
 class GeoProfile:
+
     """
     Class representing the topographic and geological elements
     embodying a single geological profile.
     """
 
-    def __init__(self):
+    def __init__(self,
+         topo_profile: Optional[TopographicProfile] = None,
+         attitudes: Optional[Attitudes] = None,
+         lines_intersections: Optional[LinesIntersections] = None,
+         polygons_intersections: Optional[PolygonsIntersections] = None
+    ):
         """
 
         """
 
-        self._topo_profile = None
-        self._attitudes = None
-        self.lines_intersections = None
-        self.polygons_intersections = None
-        self.traces_projections = None
-        self.geosurfaces_ids = None
+        if topo_profile:
+            check_type(topo_profile, "Topographic profile", TopographicProfile)
+
+        if attitudes:
+            check_type(attitudes, "Attitudes", Attitudes)
+
+        if lines_intersections:
+            check_type(lines_intersections, "Line intersections", LinesIntersections)
+
+        if polygons_intersections:
+            check_type(polygons_intersections, "Polygon intersections", PolygonsIntersections)
+
+        self._topo_profile = topo_profile
+        self._attitudes = attitudes
+        self._lines_intersections = lines_intersections
+        self._polygons_intersections = polygons_intersections
 
     @property
     def topo_profile(self):
@@ -45,7 +61,7 @@ class GeoProfile:
 
         """
 
-        check_type(scalars_inters, "Scalars intersections", TopographicProfile)
+        check_type(scalars_inters, "Topographic profile", TopographicProfile)
         self._topo_profile = scalars_inters
 
     def clear_topo_profile(self):
@@ -101,18 +117,18 @@ class GeoProfile:
 
     @attitudes.setter
     def attitudes(self,
-        prj_attitudes: PrjAttitudes):
+                  prj_attitudes: Attitudes):
         """
         Set the projected _attitudes content.
 
         :param prj_attitudes: projected _attitudes.
-        :type prj_attitudes: PrjAttitudes.
+        :type prj_attitudes: Attitudes.
         :return:
         """
 
         check_type(prj_attitudes, "Projected _attitudes", List)
         for el in prj_attitudes:
-            check_type(el, "Projected attitude", ProjctAttitude)
+            check_type(el, "Projected attitude", Attitude)
 
         self._attitudes = prj_attitudes
 
@@ -186,7 +202,7 @@ class GeoProfile:
         :return:
         """
 
-        self.lines_intersections += intersection_list
+        self._lines_intersections += intersection_list
 
     def add_intersections_lines(self, formation_list, intersection_line3d_list, intersection_polygon_s_list2):
         """
@@ -197,7 +213,7 @@ class GeoProfile:
         :return:
         """
 
-        self.polygons_intersections = zip(formation_list, intersection_line3d_list, intersection_polygon_s_list2)
+        self._polygons_intersections = zip(formation_list, intersection_line3d_list, intersection_polygon_s_list2)
 
     def profiles_svals(self) -> List[List[numbers.Real]]:
         """
@@ -482,7 +498,7 @@ class GeoProfile:
         self.geosurfaces_ids.append(lIds)
 
 
-class GeoProfileSet:
+class GeoProfileSet():
     """
     Represents a set of Geoprofile elements,
     stored as a list
@@ -490,171 +506,164 @@ class GeoProfileSet:
 
     def __init__(self):
 
-        self._geoprofiles = []  # a list of GeoProfile instances
+        self._topo_profiles_set = None
+        self._attitudes_set = None
+        self._lines_intersections_set = None
+        self._polygons_intersections_set = None
+
+    def parameters(self) -> List:
+        """
+        Returns all the attributes of the class.
+
+        :return:
+        """
+
+        return [
+            self._topo_profiles_set,
+            self._attitudes_set,
+            self._lines_intersections_set,
+            self._polygons_intersections_set
+        ]
 
     @property
-    def geoprofiles(self):
+    def topo_profiles_set(self):
         """
 
         :return:
         """
 
-        return self._geoprofiles
+        return self._topo_profiles_set
+
+    @topo_profiles_set.setter
+    def topo_profiles_set(self,
+        topo_profiles_set: TopographicProfileSet):
+        """
+
+        :param scalars_inters: the scalar values profiles.
+        :type scalars_inters: TopographicProfile.
+        :return:
+
+        """
+
+        check_type(topo_profiles_set, "Topographic profiles set", TopographicProfileSet)
+        self._topo_profiles_set = topo_profiles_set
 
     @property
-    def geoprofiles_num(self) -> int:
-        """
-        Returns the number of geoprofiles.
-
-        :return: number of geoprofiles.
-        :rtype: int.
+    def attitudes_set(self):
         """
 
-        return len(self.geoprofiles)
-
-    def geoprofile(self, ndx):
-        """
-
-        :param ndx:
         :return:
         """
 
-        return self._geoprofiles[ndx]
+        return self._attitudes_set
 
-    def append(self, geoprofile):
+    @attitudes_set.setter
+    def attitudes_set(self,
+        attitudes_set: AttitudesSet):
         """
 
-        :param geoprofile:
+        :param attitudes_set: the attitudes set.
+        :type attitudes_set: AttitudesSet.
         :return:
+
         """
 
-        self._geoprofiles.append(geoprofile)
-
-    def insert(self, ndx, geoprofile):
-        """
-
-        :param ndx:
-        :param geoprofile:
-        :return:
-        """
-
-        self._geoprofiles.insert(ndx, geoprofile)
-
-    def move(self, ndx_init, ndx_final):
-        """
-
-        :param ndx_init:
-        :param ndx_final:
-        :return:
-        """
-
-        geoprofile = self._geoprofiles.pop(ndx_init)
-        self.insert(ndx_final, geoprofile)
-
-    def move_up(self, ndx):
-        """
-
-        :param ndx:
-        :return:
-        """
-
-        self.move(ndx, ndx -1)
-
-    def move_down(self, ndx):
-        """
-
-        :param ndx:
-        :return:
-        """
-
-        self.move(ndx, ndx + 1)
-
-    def remove(self, ndx):
-        """
-
-        :param ndx:
-        :return:
-        """
-
-        _ = self._geoprofiles.pop(ndx)
-
-
-"""
-class TopoProfiles(object):
-
-    A set of topographic profiles created from a
-    single planar profile trace and a set of source elevations
-    data (for instance, a pair of dems).
-
-    def __init__(self,
-                 crs_authid: str,
-                 profile_source: str,
-                 source_names: List[str],
-                 xs: List[numbers.Real],
-                 ys: List[numbers.Real],
-                 zs: List[List[numbers.Real]],
-                 times: List[numbers.Real],
-                 inverted: bool):
-
-        self.crs_authid = crs_authid
-        self.profile_source = profile_source
-        self.source_names = source_names
-        self.xs = xs
-        self.ys = ys
-        self.zs = zs
-        self.times = times
-        self.inverted = inverted
-
-        ###
-
-        if self.crs_authid == "EPSG:4326":
-
-            self.profile_s, self.profiles_s3ds, self.profiles_dirslopes = self.params_polar()
-
-        else:
-            self.profile_s = np.asarray(source_trace.incremental_length_2d())
-
-            self.profiles_dirslopes = [np.asarray(line.slopes()) for line in topo_lines]
-
-            self.profiles_s3ds = [np.asarray(line.incremental_length_3d()) for line in topo_lines]
+        check_type(attitudes_set, "Attitudes set", AttitudesSet)
+        self._attitudes_set = attitudes_set
 
     @property
-    def num_pnts(self) -> int:
+    def lines_intersections_set(self):
+        """
 
-        return len(self.xs)
+        :return:
+        """
 
-    def max_s(self) -> numbers.Real:
+        return self._lines_intersections_set
 
-        return self.profile_s[-1]
+    @lines_intersections_set.setter
+    def lines_intersections_set(self,
+                                lines_intersections_set: LinesIntersectionsSet):
+        """
 
-    def min_z(self) -> numbers.Real:
+        :param lines_intersections_set: the lines intersections set.
+        :type lines_intersections_set: LinesIntersectionsSet.
+        :return:
 
-        return float(min([np.nanmin(prof_elev) for prof_elev in self.profiles_elevs]))
+        """
 
-    def max_z(self) -> numbers.Real:
-
-        return float(max([np.nanmax(prof_elev) for prof_elev in self.profiles_elevs]))
-
-    @property
-    def absolute_slopes(self) -> List[np.ndarray]:
-
-        return [np.fabs(prof_dirslopes) for prof_dirslopes in self.profiles_dirslopes]
-
-    @property
-    def statistics_elev(self) -> List(Dict):
-
-        return [get_statistics(prof_elev) for prof_elev in self.profiles_elevs]
+        check_type(lines_intersections_set, "Line intersections set", LinesIntersectionsSet)
+        self._lines_intersections_set = lines_intersections_set
 
     @property
-    def statistics_dirslopes(self) -> List(Dict):
+    def polygons_intersections_set(self):
+        """
 
-        return [get_statistics(prof_dirslopes) for prof_dirslopes in self.profiles_dirslopes]
+        :return:
+        """
 
-    @property
-    def statistics_slopes(self) -> List(Dict):
+        return self._polygons_intersections_set
 
-        return [get_statistics(prof_abs_slopes) for prof_abs_slopes in self.absolute_slopes]
-"""
+    @polygons_intersections_set.setter
+    def polygons_intersections_set(self,
+        polygons_intersections_set: PolygonsIntersectionsSet):
+        """
+
+        :param polygons_intersections_set: the polygons intersections set.
+        :type polygons_intersections_set: PolygonsIntersectionsSet.
+        :return:
+
+        """
+
+        check_type(polygons_intersections_set, "Polygons intersections set", PolygonsIntersectionsSet)
+        self._polygons_intersections_set = polygons_intersections_set
+
+    def num_profiles(self) -> numbers.Integral:
+        """
+        Returns the number of profiles in the geoprofile set.
+
+        :return: number of profiles in the geoprofile set.
+        :rtype: numbers.Integral.
+        """
+
+        return max(map(lambda lst: len(lst) if lst else 0, self.parameters()))
+
+    def extract_geoprofile(self, ndx: numbers.Integral) -> GeoProfile:
+        """
+        Returns a geoprofile referencing slices of stored data.
+
+        :param ndx: the index of the geoprofile.
+        :type ndx: numbers.Integral.
+        :return: the extracted Geoprofile or None.
+        :rtype: GeoProfile.
+        :raise: Exception.
+        """
+
+        if ndx not in range(self.num_profiles()):
+            raise Exception("Geoprofile set range is in 0-{} but {} got".format(self.num_profiles() - 1, ndx))
+
+        return GeoProfile(
+            topo_profile=self.topo_profiles_set[ndx] if ndx < len(self.topo_profiles_set) else None,
+            attitudes=self.attitudes_set[ndx] if ndx < len(self.attitudes_set) else None,
+            lines_intersections=self.lines_intersections_set[ndx] if ndx < len(self.lines_intersections_set) else None,
+            polygons_intersections=self.polygons_intersections_set[ndx] if ndx < len(self.polygons_intersections_set) else None
+        )
+
+    def plot(self):
+        """
+
+
+        :return:
+        """
+
+        num_subplots = self.num_profiles()
+
+        grid_spec = gridspec.GridSpec(num_subplots, 1)
+
+        ndx_subplot = -1
+
+        for ndx in range(num_subplots):
+
+            geoprofile = self.extract_geoprofile(ndx)
 
 
 def plot_geoprofiles(geoprofiles, plot_addit_params, slope_padding=0.2):

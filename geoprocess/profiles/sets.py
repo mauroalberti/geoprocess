@@ -8,198 +8,88 @@ from .elements import *
 from .chains import *
 
 
-class DrillsProjcts:
-
-    pass
-
-'''
-class TopographicProfile(list):
-    """
-    Class storing a set (one or more) of scalar profiles.
-
-    They share a set of location distances from the profile start.
-    Per se they are not required to express a linear profile.
-
-    All the profiles store double values (scalar).
-
-
+class TopographicProfileSet(list):
     """
 
-    def __init__(self):
-
-        super(TopographicProfile, self).__init__()
-
-    def num_profiles(self) -> int:
-        """
-        Return the number of available profiles.
-
-        :return: number of available profiles.
-        :rtype: int.
-        """
-
-        return len(self)
-'''
-
-class ScalarsPrevious:
+    Class storing a set of topographic profiles.
     """
 
-    Deprecated. Use class TopographicProfile.
+    def __init__(self, topo_profiles: List[TopographicProfile]):
+        """
+        Instantiates a topographic profile set.
 
-    Class storing a vertical topographic profile element.
+        :param topo_profiles: the topographic profile set.
+        :type topo_profiles: List[TopographicProfile].
+        """
+
+        check_type(topo_profiles, "Topographic profiles", List)
+        for el in topo_profiles:
+            check_type(el, "Topographic profile", TopographicProfile)
+
+        super(TopographicProfileSet, self).__init__(topo_profiles)
+
+
+class AttitudesSet(list):
     """
 
-    def __init__(self, line: Line):
+    Class storing a set of topographic profiles.
+    """
+
+    def __init__(self, attitudes_set: List[Attitude]):
         """
-        Instantiates a topographic profile object.
+        Instantiates an attitudes set.
 
-        :param line: the topographic profile line instance.
-        :type line: Line.
-        """
-
-        if not isinstance(line, Line):
-            raise Exception("Input must be a Line instance")
-
-        if line.length_2d() == 0.0:
-            raise Exception("Input line length is zero")
-
-        self._line = line
-
-        self.horiz_dist_values, self.dist_3d_values, self.dir_slopes_rads = profile_parameters(self._line)
-
-    def line(self) -> Line:
-        """
-        Returns the topographic profile line.
-
-        :return: the line of the profile.
-        :rtype: Line
+        :param attitudes_set: the attitudes set.
+        :type attitudes_set: List[Attitude].
         """
 
-        return self._line
+        check_type(attitudes_set, "Attitude set", List)
+        for el in attitudes_set:
+            check_type(el, "Attitude", Attitude)
 
-    def start_pt(self) -> Optional[Point]:
+        super(AttitudesSet, self).__init__(attitudes_set)
+
+
+class LinesIntersectionsSet(list):
+    """
+
+    Class storing a set of topographic profiles.
+    """
+
+    def __init__(self, line_intersection_set: List[LinesIntersections]):
         """
-        Returns the first point of a profile.
+        Instantiates an lines intersections set.
 
-        :return: the profile first point.
-        :rtype: Optional[Point].
-        """
-
-        return self._line.start_pt()
-
-    def end_pt(self) -> Optional[Point]:
-        """
-        Returns the last point of a profile.
-
-        :return: the profile last point.
-        :rtype: Optional[Point].
-        """
-
-        return self._line.end_pt()
-
-    def profile_s(self) -> List[numbers.Real]:
-        """
-        Returns the incremental 2D lengths of a profile.
-
-        :return: the incremental 2D lengths.
-        :rtype: list of numbers.Real values.
+        :param attitudes_set: the lines intersections set.
+        :type attitudes_set: List[LinesIntersections].
         """
 
-        return list(itertools.accumulate(self.horiz_dist_values))
+        check_type(line_intersection_set, "Line intersections set", List)
+        for el in line_intersection_set:
+            check_type(el, "Line intersections", LinesIntersections)
 
-    def profile_length(self) -> numbers.Real:
+        super(LinesIntersectionsSet, self).__init__(line_intersection_set)
+
+
+class PolygonsIntersectionsSet(list):
+    """
+
+    Class storing a set of topographic profiles.
+    """
+
+    def __init__(self, polygons_intersections_set: List[PolygonsIntersections]):
         """
-        Returns the length of the profile.
+        Instantiates a polygons intersections set.
 
-        :return: length of profile.
-        :rtype: numbers.Real.
-        """
-
-        return self._line.length_2d()
-
-    def profile_length_3d(self) -> numbers.Real:
-        """
-        Returns the 3D length of the profile.
-
-        :return: 3D length of profile.
-        :rtype: numbers.Real.
-        """
-
-        return self._line.length_3d()
-
-    def elevations(self) -> List[numbers.Real]:
-        """
-        Returns the elevations of the profile.
-
-        :return: the elevations.
-        :rtype: list of floats.
+        :param polygons_intersections_set: the polygons intersections set.
+        :type polygons_intersections_set: List[PolygonsIntersections].
         """
 
-        return self._line.z_list()
+        check_type(polygons_intersections_set, "PolygonsIntersections set", List)
+        for el in polygons_intersections_set:
+            check_type(el, "Polygons intersections", PolygonsIntersections)
 
-    def elev_stats(self) -> Dict:
-        """
-        Calculates profile elevation statistics.
-
-        :return: the elevation statistic values.
-        :rtype: Dict.
-        """
-
-        return self._line.z_stats()
-
-    def slopes(self) -> List[Optional[numbers.Real]]:
-        """
-        Returns the slopes of a topographic profile.
-
-        :return: slopes.
-        :rtype: list of slope values.
-        """
-
-        return self._line.slopes()
-
-    def abs_slopes(self) -> List[Optional[numbers.Real]]:
-        """
-        Returns the absolute slopes of a topographic profile.
-
-        :return: absolute slopes.
-        :rtype: list of slope values.
-        """
-
-        return self._line.abs_slopes()
-
-    def slopes_stats(self) -> Dict:
-        """
-        Calculates profile directional slopes statistics.
-
-        :return: the slopes statistic values.
-        :rtype: Dict.
-        """
-
-        return self._line.slopes_stats()
-
-    def absslopes_stats(self) -> Dict:
-        """
-        Calculates profile absolute slopes statistics.
-
-        :return: the absolute slopes statistic values.
-        :rtype: Dict.
-        """
-
-        return self._line.abs_slopes_stats()
-
-
-class LinesIntersections:
-
-    pass
-
-
-class TracesProjections:
-
-    pass
-
-
-class PolygonsIntersections:
-
-    pass
+        super(PolygonsIntersectionsSet, self).__init__(polygons_intersections_set)
 
 
 def profile_parameters(profile: Line) -> Tuple[List[numbers.Real], List[numbers.Real], List[numbers.Real]]:
