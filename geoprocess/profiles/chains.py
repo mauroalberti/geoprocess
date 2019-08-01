@@ -1,8 +1,6 @@
 
 from typing import List
 
-import numbers
-
 from array import array
 
 from ..types.utils import check_type
@@ -51,6 +49,46 @@ class TopographicProfile():
         """
 
         return self._z
+
+    def s_min(self) -> numbers.Real:
+        """
+        Returns the minimum s value.
+
+        :return: the minimum s value.
+        :rtype: numbers.Real.
+        """
+
+        return min(self._s)
+
+    def s_max(self) -> numbers.Real:
+        """
+        Returns the maximum s value.
+
+        :return: the maximum s value.
+        :rtype: numbers.Real.
+        """
+
+        return max(self._s)
+
+    def z_min(self) -> numbers.Real:
+        """
+        Returns the minimum z value.
+
+        :return: the minimum z value.
+        :rtype: numbers.Real.
+        """
+
+        return min(self._z)
+
+    def z_max(self) -> numbers.Real:
+        """
+        Returns the maximum z value.
+
+        :return: the maximum z value.
+        :rtype: numbers.Real.
+        """
+
+        return max(self._z)
 
     def num_steps(self) -> int:
         """

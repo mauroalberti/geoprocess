@@ -7,6 +7,9 @@ from ..widgets.mpl_widget import MplWidget
 from .sets import *
 
 
+z_padding = 0.2
+
+
 class GeoProfile:
 
     """
@@ -158,13 +161,13 @@ class GeoProfile:
              attitudes=True,
              line_intersections=True,
              polygon_intersections=True,
-             line_projections=True,
              topo_profile_color="blue",
              attitudes_color="red",
              line_intersections_color="orange",
              aspect: numbers.Real = 1,
              width: numbers.Real = 18.5,
              height: numbers.Real = 10.5,
+             **params
              ):
         """
 
@@ -181,7 +184,18 @@ class GeoProfile:
 
         ax.set_aspect(aspect)
 
+        if 'plot_z_min' in params and 'plot_z_max' in params:
+            plot_z_min = params['plot_z_min']
+            plot_z_max = params['plot_z_max']
+        else:
+
+            z_range = self.z_max() - self.z_min()
+            plot_z_min = self.z_min() - z_padding * z_range
+            plot_z_max = self.z_max() + z_padding * z_range
+
         if topo_profile and self._topo_profile:
+
+            ax.set_ylim([plot_z_min, plot_z_max])
             ax.plot(
                 self._topo_profile.s(),
                 self._topo_profile.z(),
@@ -189,12 +203,61 @@ class GeoProfile:
             )
 
         if attitudes and self._attitudes:
+
             self._attitudes.plot(
                 fig,
                 self.length_2d(),
                 color=attitudes_color
             )
 
+        if line_intersections and self._lines_intersections:
+
+            self._lines_intersections.plot(
+                fig,
+                self.length_2d(),
+                color=line_intersections_color
+            )
+
+        if polygon_intersections and self._polygons_intersections:
+
+            self._polygons_intersections.plot(
+                fig,
+                self.length_2d()
+            )
+
+    def s_min(self):
+        """
+
+        :return:
+        """
+
+        return self.topo_profile.s_min()
+
+    def s_max(self):
+        """
+
+        :return:
+        """
+
+        return self.topo_profile.s_max()
+
+    def z_min(self):
+        """
+
+        :return:
+        """
+
+        return self.topo_profile.z_min()
+
+    def z_max(self):
+        """
+
+        :return:
+        """
+
+        return self.topo_profile.z_max()
+
+    '''
     def add_intersections_pts(self, intersection_list):
         """
 
@@ -214,26 +277,7 @@ class GeoProfile:
         """
 
         self._polygons_intersections = zip(formation_list, intersection_line3d_list, intersection_polygon_s_list2)
-
-    def profiles_svals(self) -> List[List[numbers.Real]]:
-        """
-        Returns the list of the s values for the profiles.
-
-        :return: list of the s values.
-        :rtype
-        """
-
-        return [topoprofile.profile_s() for topoprofile in self._topo_profile]
-
-    def profiles_zs(self) -> List[numbers.Real]:
-        """
-        Returns the elevations of the profiles.
-
-        :return: the elevations.
-        :rtype: list of numbers.Real values.
-        """
-
-        return [topoprofile.elevations() for topoprofile in self._topo_profile]
+    '''
 
     def length_2d(self) -> numbers.Real:
         """
@@ -245,258 +289,6 @@ class GeoProfile:
 
         return self._topo_profile.profile_length()
 
-    def profiles_lengths_3d(self) -> List[numbers.Real]:
-        """
-        Returns the 3D lengths of the profiles.
-
-        :return: the 3D profiles lengths.
-        :rtype: list of numbers.Real values.
-        """
-
-        return [topoprofile.profile_length_3d() for topoprofile in self._topo_profile]
-
-    def minmax_length_2d(self) -> Tuple[Optional[numbers.Real], Optional[numbers.Real]]:
-        """
-        Returns the maximum 2D length of profiles.
-
-        :return: the minimum and maximum profiles lengths.
-        :rtype: a pair of optional numbers.Real values.
-        """
-
-        lengths = self.length_2d()
-
-        if lengths:
-            return min(lengths), max(lengths)
-        else:
-            return None, None
-
-    def max_length_2d(self) -> Optional[numbers.Real]:
-        """
-        Returns the maximum 2D length of profiles.
-
-        :return: the maximum profiles lengths.
-        :rtype: an optional numbers.Real value.
-        """
-
-        lengths = self.length_2d()
-
-        if lengths:
-            return max(lengths)
-        else:
-            return None
-
-    def topoprofiles_params(self):
-        """
-
-        :return:
-        """
-
-        topo_lines = [topo_profile.line for topo_profile in self._topo_profile]
-        max_s = max(map(lambda line: line.length_2d(), topo_lines))
-        min_z = min(map(lambda line: line.z_min(), topo_lines))
-        max_z = max(map(lambda line: line.z_max(), topo_lines))
-
-        return max_s, min_z, max_z
-
-    def elev_stats(self) -> List[Dict]:
-        """
-        Returns the elevation statistics for the topographic profiles.
-
-        :return: elevation statistics for the topographic profiles.
-        :rtype: list of dictionaries.
-        """
-
-        return [topoprofile.elev_stats() for topoprofile in self._topo_profile]
-
-    def slopes(self) -> List[List[Optional[numbers.Real]]]:
-        """
-        Returns a list of the slopes of the topographic profiles in the geoprofile.
-
-        :return: list of the slopes of the topographic profiles.
-        :rtype: list of list of topographic slopes.
-        """
-
-        return [topoprofile.slopes() for topoprofile in self._topo_profile]
-
-    def abs_slopes(self) -> List[List[Optional[numbers.Real]]]:
-        """
-        Returns a list of the absolute slopes of the topographic profiles in the geoprofile.
-
-        :return: list of the absolute slopes of the topographic profiles.
-        :rtype: list of list of topographic absolute slopes.
-        """
-
-        return [topoprofile.abs_slopes() for topoprofile in self._topo_profile]
-
-    def slopes_stats(self) -> List[Dict]:
-        """
-        Returns the directional slopes statistics
-        for each profile.
-
-        :return: the list of the profiles statistics.
-        :rtype: List of dictionaries.
-        """
-
-        return [topoprofile.slopes_stats() for topoprofile in self._topo_profile]
-
-    def absslopes_stats(self) -> List[Dict]:
-        """
-        Returns the absolute slopes statistics
-        for each profile.
-
-        :return: the list of the profiles statistics.
-        :rtype: List of dictionaries.
-        """
-
-        return [topoprofile.absslopes_stats() for topoprofile in self._topo_profile]
-
-    def min_z_plane_attitudes(self):
-        """
-
-        :return:
-        """
-
-        # TODO:  manage case for possible nan p_z values
-        return min([plane_attitude.pt_3d.p_z for plane_attitude_set in self._attitudes for plane_attitude in
-                    plane_attitude_set if 0.0 <= plane_attitude.sign_hor_dist <= self.max_s()])
-
-    def max_z_plane_attitudes(self):
-        """
-
-        :return:
-        """
-
-        # TODO:  manage case for possible nan p_z values
-        return max([plane_attitude.pt_3d.p_z for plane_attitude_set in self._attitudes for plane_attitude in
-                    plane_attitude_set if 0.0 <= plane_attitude.sign_hor_dist <= self.max_s()])
-
-    def min_z_curves(self):
-        """
-
-        :return:
-        """
-
-        return min([pt_2d.p_y for multiline_2d_list in self.traces_projections for multiline_2d in multiline_2d_list for line_2d in
-                    multiline_2d.lines for pt_2d in line_2d.pts if 0.0 <= pt_2d.p_x <= self.max_s()])
-
-    def max_z_curves(self):
-        """
-
-        :return:
-        """
-
-        return max([pt_2d.p_y for multiline_2d_list in self.traces_projections for multiline_2d in multiline_2d_list for line_2d in
-                    multiline_2d.lines for pt_2d in line_2d.pts if 0.0 <= pt_2d.p_x <= self.max_s()])
-
-    def mins_z_topo(self) -> List[numbers.Real]:
-        """
-        Returns a list of elevation minimums in the topographic profiles.
-
-        :return: the elevation minimums.
-
-        """
-
-        return [topo_profile.elev_stats["min"] for topo_profile in self._topo_profile]
-
-    def maxs_z_topo(self) -> List[numbers.Real]:
-        """
-        Returns a list of elevation maximums in the topographic profiles.
-
-        :return:
-        """
-
-        return [topo_profile.elev_stats["max"] for topo_profile in self._topo_profile]
-
-    def min_z_topo(self) -> Optional[numbers.Real]:
-        """
-        Returns the minimum elevation value in the topographic profiles.
-
-        :return: the minimum elevation value in the profiles.
-        :rtype: optional numbers.Real.
-        """
-
-        mins_z = self.mins_z_topo()
-        if mins_z:
-            return min(mins_z)
-        else:
-            return None
-
-    def max_z_topo(self) -> Optional[numbers.Real]:
-        """
-        Returns the maximum elevation value in the topographic profiles.
-
-        :return: the maximum elevation value in the profiles.
-        :rtype: optional numbers.Real.
-        """
-
-        maxs_z = self.maxs_z_topo()
-        if maxs_z:
-            return max(maxs_z)
-        else:
-            return None
-
-    def natural_elev_range(self) -> Tuple[numbers.Real, numbers.Real]:
-        """
-        Returns the elevation range of the profiles.
-
-        :return: minimum and maximum values of the considered topographic profiles.
-        :rtype: tuple of two floats.
-        """
-
-        return self.min_z_topo(), self.max_z_topo()
-
-    def min_z(self):
-        """
-
-        :return:
-        """
-
-        min_z = self.min_z_topo()
-
-        if len(self._attitudes) > 0:
-            min_z = min([min_z, self.min_z_plane_attitudes()])
-
-        if len(self.traces_projections) > 0:
-            min_z = min([min_z, self.min_z_curves()])
-
-        return min_z
-
-    def max_z(self):
-        """
-
-        :return:
-        """
-
-        max_z = self.max_z_topo()
-
-        if len(self._attitudes) > 0:
-            max_z = max([max_z, self.max_z_plane_attitudes()])
-
-        if len(self.traces_projections) > 0:
-            max_z = max([max_z, self.max_z_curves()])
-
-        return max_z
-
-    def add_plane_attitudes(self, plane_attitudes):
-        """
-
-        :param plane_attitudes:
-        :return:
-        """
-
-        self._attitudes.append(plane_attitudes)
-
-    def add_curves(self, lMultilines, lIds):
-        """
-
-        :param lMultilines:
-        :param lIds:
-        :return:
-        """
-
-        self.traces_projections.append(lMultilines)
-        self.geosurfaces_ids.append(lIds)
-
 
 class GeoProfileSet():
     """
@@ -504,12 +296,29 @@ class GeoProfileSet():
     stored as a list
     """
 
-    def __init__(self):
+    def __init__(self,
+        topo_profiles_set: Optional[TopographicProfileSet] = None,
+        attitudes_set: Optional[AttitudesSet] = None,
+        lines_intersections_set: Optional[LinesIntersectionsSet] = None,
+        polygons_intersections_set: Optional[PolygonsIntersectionsSet] = None
+        ):
 
-        self._topo_profiles_set = None
-        self._attitudes_set = None
-        self._lines_intersections_set = None
-        self._polygons_intersections_set = None
+        if topo_profiles_set:
+            check_type(topo_profiles_set, "Toppographic profiles set", TopographicProfileSet)
+
+        if attitudes_set:
+            check_type(attitudes_set, "Attitudes set", AttitudesSet)
+
+        if lines_intersections_set:
+            check_type(lines_intersections_set, "Lines intersections set", LinesIntersectionsSet)
+
+        if polygons_intersections_set:
+            check_type(polygons_intersections_set, "Polygons_intersections set", PolygonsIntersectionsSet)
+
+        self._topo_profiles_set = topo_profiles_set
+        self._attitudes_set = attitudes_set
+        self._lines_intersections_set = lines_intersections_set
+        self._polygons_intersections_set = polygons_intersections_set
 
     def parameters(self) -> List:
         """
@@ -642,11 +451,43 @@ class GeoProfileSet():
             raise Exception("Geoprofile set range is in 0-{} but {} got".format(self.num_profiles() - 1, ndx))
 
         return GeoProfile(
-            topo_profile=self.topo_profiles_set[ndx] if ndx < len(self.topo_profiles_set) else None,
-            attitudes=self.attitudes_set[ndx] if ndx < len(self.attitudes_set) else None,
-            lines_intersections=self.lines_intersections_set[ndx] if ndx < len(self.lines_intersections_set) else None,
-            polygons_intersections=self.polygons_intersections_set[ndx] if ndx < len(self.polygons_intersections_set) else None
+            topo_profile=self.topo_profiles_set[ndx] if self.topo_profiles_set and ndx < len(self.topo_profiles_set) else None,
+            attitudes=self.attitudes_set[ndx] if self.attitudes_set and ndx < len(self.attitudes_set) else None,
+            lines_intersections=self.lines_intersections_set[ndx] if self.lines_intersections_set and ndx < len(self.lines_intersections_set) else None,
+            polygons_intersections=self.polygons_intersections_set[ndx] if self.polygons_intersections_set and ndx < len(self.polygons_intersections_set) else None
         )
+
+    def s_min(self):
+        """
+
+        :return:
+        """
+
+        return self.topo_profiles_set.s_min()
+
+    def s_max(self):
+        """
+
+        :return:
+        """
+
+        return self.topo_profiles_set.s_max()
+
+    def z_min(self):
+        """
+
+        :return:
+        """
+
+        return self.topo_profiles_set.z_min()
+
+    def z_max(self):
+        """
+
+        :return:
+        """
+
+        return self.topo_profiles_set.z_max()
 
     def plot(self):
         """
@@ -657,13 +498,123 @@ class GeoProfileSet():
 
         num_subplots = self.num_profiles()
 
-        grid_spec = gridspec.GridSpec(num_subplots, 1)
-
-        ndx_subplot = -1
+        z_range = self.z_max() - self.z_min()
+        plot_z_min = self.z_min() - z_range * z_padding
+        plot_z_max = self.z_max() + z_range * z_padding
 
         for ndx in range(num_subplots):
 
             geoprofile = self.extract_geoprofile(ndx)
+            geoprofile.plot(
+                plot_z_min=plot_z_min,
+                plot_z_max=plot_z_max
+            )
+
+    '''
+    def z_min(self):
+        """
+
+        :return:
+        """
+
+        z_min = self.min_z_topo()
+
+        if len(self._attitudes) > 0:
+            z_min = min([z_min, self.min_z_plane_attitudes()])
+
+        if len(self.traces_projections) > 0:
+            z_min = min([z_min, self.min_z_curves()])
+
+        return z_min
+
+    def z_max(self):
+        """
+
+        :return:
+        """
+
+        z_max = self.max_z_topo()
+
+        if len(self._attitudes) > 0:
+            z_max = max([z_max, self.max_z_plane_attitudes()])
+
+        if len(self.traces_projections) > 0:
+            z_max = max([z_max, self.max_z_curves()])
+
+        return z_max
+    '''
+
+    ## inherited - TO CHECK
+
+    def profiles_svals(self) -> List[List[numbers.Real]]:
+        """
+        Returns the list of the s values for the profiles.
+
+        :return: list of the s values.
+        :rtype
+        """
+
+        return [topoprofile.profile_s() for topoprofile in self._topo_profile]
+
+    def profiles_zs(self) -> List[numbers.Real]:
+        """
+        Returns the elevations of the profiles.
+
+        :return: the elevations.
+        :rtype: list of numbers.Real values.
+        """
+
+        return [topoprofile.elevations() for topoprofile in self._topo_profile]
+
+    def profiles_lengths_3d(self) -> List[numbers.Real]:
+        """
+        Returns the 3D lengths of the profiles.
+
+        :return: the 3D profiles lengths.
+        :rtype: list of numbers.Real values.
+        """
+
+        return [topoprofile.profile_length_3d() for topoprofile in self._topo_profile]
+
+    def minmax_length_2d(self) -> Tuple[Optional[numbers.Real], Optional[numbers.Real]]:
+        """
+        Returns the maximum 2D length of profiles.
+
+        :return: the minimum and maximum profiles lengths.
+        :rtype: a pair of optional numbers.Real values.
+        """
+
+        lengths = self.length_2d()
+
+        if lengths:
+            return min(lengths), max(lengths)
+        else:
+            return None, None
+
+    def max_length_2d(self) -> Optional[numbers.Real]:
+        """
+        Returns the maximum 2D length of profiles.
+
+        :return: the maximum profiles lengths.
+        :rtype: an optional numbers.Real value.
+        """
+
+        lengths = self.length_2d()
+
+        if lengths:
+            return max(lengths)
+        else:
+            return None
+
+
+    def add_plane_attitudes(self, plane_attitudes):
+        """
+
+        :param plane_attitudes:
+        :return:
+        """
+
+        self._attitudes.append(plane_attitudes)
 
 
 def plot_geoprofiles(geoprofiles, plot_addit_params, slope_padding=0.2):

@@ -775,14 +775,14 @@ class ParallelProfilers(list):
 
     def profile_grid(
             self,
-            geoarray: GeoArray) -> List[TopographicProfile]:
+            geoarray: GeoArray) -> TopographicProfileSet:
         """
         Create profile from one geoarray.
 
         :param geoarray: the source geoarray.
         :type geoarray: GeoArray.
         :return: list of profiles of the scalar variable stored in the geoarray.
-        :rtype: List[TopographicProfile].
+        :rtype: TopographicProfileSet.
         :raise: Exception.
         """
 
@@ -792,7 +792,7 @@ class ParallelProfilers(list):
 
             topo_profiles.append(profiler.profile_grid(geoarray))
 
-        return topo_profiles
+        return TopographicProfileSet(topo_profiles)
 
 
 def calculate_profile_lines_intersection(multilines2d_list, id_list, profile_line2d):
