@@ -8,6 +8,7 @@ import os
 
 from osgeo import ogr, osr
 
+from pygsf.types.utils import *
 from pygsf.spatial.vectorial.geometries import Point, Line, MultiLine
 
 
@@ -18,11 +19,18 @@ class OGRIOException(Exception):
     pass
 
 
-ogr_line_types = [
+ogr_simpleline_types = [
     ogr.wkbLineString,
     ogr.wkbLineString25D,
     ogr.wkbLineStringM,
     ogr.wkbLineStringZM
+]
+
+ogr_multiline_types = [
+    ogr.wkbMultiLineString,
+    ogr.wkbMultiLineString25D,
+    ogr.wkbMultiLineStringM,
+    ogr.wkbMultiLineStringZM
 ]
 
 
@@ -38,8 +46,124 @@ def try_open_shapefile(path: str) -> Tuple[bool, Union["OGRLayer", str]]:
     return True, shapelayer
 
 
+def try_read_line_shapefile(
+        shp_path: str,
+        flds: Optional[List[str]] = None
+    ) -> Tuple[bool, Union[str, List[Tuple[list, tuple]]]]:
+    """
+    Read results geometries from a line shapefile using ogr.
+    TODO: it could read also other formats, but it has to be checked.
+
+    :param shp_path: line shapefile path.
+    :type shp_path: str.
+    :param flds: the fields to extract values from.
+    :type flds: Optional[List[str]].
+    :return: success status and (error message or results).
+    :rtype: Tuple[bool, Union[str, List[Tuple[list, tuple]]]].
+    """
+
+    # check input path
+
+    check_type(shp_path, "Shapefile path", str)
+    if shp_path == '':
+        return False, "Input shapefile path should not be empty"
+    if not os.path.exists(shp_path):
+        return False, "Input shapefile path does not exist"
+
+    # open input vector layer
+
+    ds = ogr.Open(shp_path, 0)
+
+    if ds is None:
+        return False, "Input shapefile path not read"
+
+    # get internal layer
+
+    lyr = ds.GetLayer()
+
+    # get projection
+
+    srs = lyr.GetSpatialRef()
+    srs.AutoIdentifyEPSG()
+    authority = srs.GetAuthorityName(None)
+    if authority.upper() == "EPSG":
+        epsg_cd = int(srs.GetAuthorityCode(None))
+    else:
+        epsg_cd = -1
+
+    # initialize list storing results
+
+    results = []
+
+    # loop in layer features
+
+    for feat in lyr:
+
+        # get attributes
+
+        if flds:
+            feat_attributes = tuple(map(lambda fld_nm: feat.GetField(fld_nm), flds))
+        else:
+            feat_attributes = ()
+
+        # get geometries
+
+        # feat_geometries = []
+
+        curr_geom = feat.GetGeometryRef()
+
+        if curr_geom is None:
+            del ds
+            return False, "Input shapefile path not read"
+
+        geometry_type = curr_geom.GetGeometryType()
+        if geometry_type in ogr_simpleline_types:
+            geom_type = "simpleline"
+        elif geometry_type in ogr_multiline_types:
+            geom_type = "multiline"
+        else:
+            del ds
+            return False, "Geometry type is {}, line expected".format(geom_type)
+
+        if geom_type == "simpleline":
+
+            line = Line(epsg_cd=epsg_cd)
+
+            for i in range(curr_geom.GetPointCount()):
+                x, y, z = curr_geom.GetX(i), curr_geom.GetY(i), curr_geom.GetZ(i)
+
+                line.add_pt(Point(x, y, z, epsg_cd=epsg_cd))
+
+            feat_geometries = line
+
+        else:  # multiline case
+
+            multiline = MultiLine(epsg_cd=epsg_cd)
+
+            for line_geom in curr_geom:
+
+                line = Line(epsg_cd=epsg_cd)
+
+                for i in range(line_geom.GetPointCount()):
+                    x, y, z = line_geom.GetX(i), line_geom.GetY(i), line_geom.GetZ(i)
+
+                    line.add_pt(Point(x, y, z, epsg_cd=epsg_cd))
+
+                multiline.add_line(line)
+
+            feat_geometries = multiline
+
+        results.append((feat_geometries, feat_attributes))
+
+    del ds
+
+    return True, results
+
+
 def read_linestring_geometries(line_shp_path: str) -> Optional[MultiLine]:
     """
+    Deprecated. Use 'read_lines_geometries'.
+
     Read linestring geometries from a shapefile using ogr.
     The geometry type of the input shapefile must be LineString (MultiLineString is not currently managed).
 
@@ -76,8 +200,10 @@ def read_linestring_geometries(line_shp_path: str) -> Optional[MultiLine]:
     srs = layer.GetSpatialRef()
     srs.AutoIdentifyEPSG()
     authority = srs.GetAuthorityName(None)
-    assert authority == "EPSG"
-    epsg_cd = int(srs.GetAuthorityCode(None))
+    if authority == "EPSG":
+        epsg_cd = int(srs.GetAuthorityCode(None))
+    else:
+        epsg_cd = -1
 
     # initialize list storing vertex coordinates of lines
 
@@ -98,7 +224,7 @@ def read_linestring_geometries(line_shp_path: str) -> Optional[MultiLine]:
             return None
 
         geometry_type = geometry.GetGeometryType()
-        if geometry_type not in ogr_line_types:
+        if geometry_type not in ogr_simpleline_types:
             datasource.Destroy()
             return None
 

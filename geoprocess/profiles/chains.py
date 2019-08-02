@@ -3,7 +3,10 @@ from typing import List
 
 from array import array
 
-from ..types.utils import check_type
+
+from pygsf.types.utils import *
+
+
 from .elements import *
 
 

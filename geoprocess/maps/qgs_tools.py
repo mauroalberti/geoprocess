@@ -96,15 +96,15 @@ def line_project(line: Line, srcCrs: QgsCoordinateReferenceSystem, destCrs: QgsC
 
 def multiline_project(multiline: MultiLine, srcCrs: QgsCoordinateReferenceSystem, destCrs: QgsCoordinateReferenceSystem) -> MultiLine:
     """
-    Projects a multiline from a source to a destination CRS.
+    Projects a multiline1 from a source to a destination CRS.
 
-    :param multiline: the original multiline, to be projected.
+    :param multiline: the original multiline1, to be projected.
     :type multiline: MultiLine.
-    :param srcCrs: the CRS of the original multiline.
+    :param srcCrs: the CRS of the original multiline1.
     :type srcCrs: QgsCoordinateReferenceSystem.
-    :param destCrs: the final CRS of the multiline.
+    :param destCrs: the final CRS of the multiline1.
     :type destCrs: QgsCoordinateReferenceSystem.
-    :return: the projected multiline.
+    :return: the projected multiline1.
     :rtype: MultiLine.
     """
 
@@ -484,7 +484,7 @@ def line_geoms_with_id(line_layer, curr_field_ndx):
              
         geom = feature.geometry()         
         if geom.isMultipart():
-            lines.append(('multiline', multipolyline_to_xytuple_list2(geom.asMultiPolyline()))) # typedef QVector<QgsPolyline>
+            lines.append(('multiline1', multipolyline_to_xytuple_list2(geom.asMultiPolyline()))) # typedef QVector<QgsPolyline>
             # now is a list of list of (x,y) tuples
         else:           
             lines.append(('line', polyline_to_xytuple_list(geom.asPolyline())))  # typedef QVector<QgsPointXY>

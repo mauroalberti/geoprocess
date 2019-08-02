@@ -4,6 +4,8 @@ from operator import attrgetter
 
 from math import acos
 
+
+from pygsf.types.utils import *
 from pygsf.geology.orientations import *
 from pygsf.spatial.rasters.geoarray import *
 
@@ -155,7 +157,7 @@ class LinearProfiler:
         :rtype: numbers.Real.
         """
 
-        return self.segment().length_3d()
+        return self.segment().length3D()
 
     def vector(self) -> Vect:
         """
