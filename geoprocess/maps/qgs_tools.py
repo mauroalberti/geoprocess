@@ -698,7 +698,7 @@ class QGisRasterParameters(object):
 
     def point_in_dem_area(self, point):
         """
-        Check that a point is within or on the boundary of the grid area.
+        Check that a point is intersect or on the boundary of the grid area.
         Assume grid has no rotation.
 
         :param point: qProf.gsf.geometry.Point
@@ -713,7 +713,7 @@ class QGisRasterParameters(object):
 
     def point_in_interpolation_area(self, point):
         """
-        Check that a point is within or on the boundary of the area defined by
+        Check that a point is intersect or on the boundary of the area defined by
         the extreme cell center values.
         Assume grid has no rotation.
 

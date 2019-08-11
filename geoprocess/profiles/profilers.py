@@ -17,7 +17,7 @@ from .sets import *
 class LinearProfiler:
     """
     Class storing a linear (straight) profile.
-    It is contained within a vertical plane, assuming a Cartesian x-y-z frame.
+    It is contained intersect a vertical plane, assuming a Cartesian x-y-z frame.
     """
 
     def __init__(self,
