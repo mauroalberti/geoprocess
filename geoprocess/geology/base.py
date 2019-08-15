@@ -2,7 +2,7 @@
 
 from collections import namedtuple
 
-from pygsf.geology.faults import *
+from pygsf.spatial.geology.faults import *
 
 
 georef_att_flds = [

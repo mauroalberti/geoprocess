@@ -16,7 +16,13 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 
 from pygsf.spatial.vectorial.geometries import Point, Segment, Line, MultiLine
-from pygsf.spatial.exceptions import VectorIOException
+
+
+
+class VectorIOException(Exception):
+
+    pass
+
 
 
 def calculate_azimuth_correction(src_pt: Point, crs: QgsCoordinateReferenceSystem) -> numbers.Real:
