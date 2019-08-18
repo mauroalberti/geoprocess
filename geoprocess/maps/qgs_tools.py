@@ -15,8 +15,7 @@ from qgis.gui import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 
-from pygsf.spatial.vectorial.geometries import Point, Segment, Line, MultiLine
-
+from pygsf.spatial.vectorial.geometries import Line, MultiLine, Segment, Point
 
 
 class VectorIOException(Exception):

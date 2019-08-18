@@ -8,8 +8,8 @@ import os
 
 from osgeo import ogr, osr
 
-from pygsf.types.utils import *
-from pygsf.spatial.vectorial.geometries import Point, Line, MultiLine
+from pygsf.utils.types import *
+from pygsf.spatial.vectorial.geometries import Line, MultiLine, Point
 
 
 class OGRIOException(Exception):

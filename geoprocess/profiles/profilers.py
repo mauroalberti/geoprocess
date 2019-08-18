@@ -4,7 +4,6 @@ from operator import attrgetter
 
 from math import acos
 
-from pygsf.spatial.geology.orientations import *
 from pygsf.spatial.rasters.geoarray import *
 
 from ..geology.base import GeorefAttitude

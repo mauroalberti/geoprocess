@@ -4,7 +4,7 @@ from typing import List
 from array import array
 
 
-from pygsf.types.utils import *
+from pygsf.utils.types import *
 
 
 from .elements import *

@@ -1,10 +1,10 @@
 
-from pygsf.spatial.vectorial.geometries import *
+from pygsf.spatial.vectorial.utils import *
+from pygsf.spatial.vectorial.geometries import Line
 
 from ..widgets.mpl_widget import plot_line, plot_filled_line
 from ..widgets.qt_tools import qcolor2rgbmpl
 
-from .elements import *
 from .chains import *
 
 

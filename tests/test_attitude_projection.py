@@ -3,10 +3,8 @@
 
 import unittest
 
-
-from pygsf.spatial.vectorial.geometries import *
-
 from geoprocess.profiles.profilers import LinearProfiler
+from pygsf.spatial.vectorial.geometries import Point, CPlane, Plane
 
 src_profile_shapefile_pth = "/home/mauro/Documents/projects/geoprocess/example_data/mt_alpi/profile.shp"
 attitudes_shape = "/home/mauro/Documents/projects/geoprocess/example_data/mt_alpi/_attitudes.shp"
