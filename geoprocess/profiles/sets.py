@@ -1,5 +1,9 @@
 
-from pygsf.spatial.vectorial.utils import *
+from typing import Optional, Tuple, Dict
+
+from math import pi, asin
+
+
 from pygsf.spatial.vectorial.geometries import Line
 
 from ..widgets.mpl_widget import plot_line, plot_filled_line
@@ -192,8 +196,8 @@ class LinesIntersectionsSet(list):
         """
         Instantiates an lines intersections set.
 
-        :param attitudes_set: the lines intersections set.
-        :type attitudes_set: List[LinesIntersections].
+        :param line_intersection_set: the lines intersections set.
+        :type line_intersection_set: List[LinesIntersections].
         """
 
         check_type(line_intersection_set, "Line intersections set", List)

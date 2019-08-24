@@ -130,7 +130,7 @@ def topoline_from_dem(resampled_trace2d: Line, project_crs, dem, dem_params) -> 
     :return: the Line instance.
     """
 
-    if dem.crs() != project_crs:
+    if dem.crs != project_crs:
         trace2d_in_dem_crs = line_project(resampled_trace2d, project_crs, dem.crs())
     else:
         trace2d_in_dem_crs = resampled_trace2d
@@ -562,7 +562,7 @@ def raster_qgis_params(raster_layer):
         nodatavalue = np.nan
     
     try:
-        crs = raster_layer.crs()
+        crs = raster_layer.crs
     except:
         crs = None
     

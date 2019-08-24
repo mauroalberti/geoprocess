@@ -1,4 +1,9 @@
 
+from typing import Optional, Tuple
+
+import numpy as np
+
+
 from matplotlib import gridspec
 import matplotlib.pyplot as plt
 
@@ -348,8 +353,8 @@ class GeoProfileSet():
         topo_profiles_set: TopographicProfileSet):
         """
 
-        :param scalars_inters: the scalar values profiles.
-        :type scalars_inters: TopographicProfile.
+        :param topo_profiles_set: the scalar values profiles.
+        :type topo_profiles_set: TopographicProfile.
         :return:
 
         """
@@ -554,7 +559,7 @@ class GeoProfileSet():
         :rtype
         """
 
-        return [topoprofile.profile_s() for topoprofile in self._topo_profile]
+        return [topoprofile.profile_s() for topoprofile in self._topo_profiles_set]
 
     def profiles_zs(self) -> List[numbers.Real]:
         """
@@ -564,7 +569,7 @@ class GeoProfileSet():
         :rtype: list of numbers.Real values.
         """
 
-        return [topoprofile.elevations() for topoprofile in self._topo_profile]
+        return [topoprofile.elevations() for topoprofile in self._topo_profiles_set]
 
     def profiles_lengths_3d(self) -> List[numbers.Real]:
         """
@@ -574,7 +579,7 @@ class GeoProfileSet():
         :rtype: list of numbers.Real values.
         """
 
-        return [topoprofile.profile_length_3d() for topoprofile in self._topo_profile]
+        return [topoprofile.profile_length_3d() for topoprofile in self._topo_profiles_set]
 
     def minmax_length_2d(self) -> Tuple[Optional[numbers.Real], Optional[numbers.Real]]:
         """
@@ -614,7 +619,7 @@ class GeoProfileSet():
         :return:
         """
 
-        self._attitudes.append(plane_attitudes)
+        self._attitudes_set.append(plane_attitudes)
 
 
 def plot_geoprofiles(geoprofiles, plot_addit_params, slope_padding=0.2):

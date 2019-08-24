@@ -37,7 +37,7 @@ class LinearProfiler:
 
         check_type(end_pt, "Input end point", Point)
 
-        if start_pt.crs() != end_pt.crs():
+        if start_pt.crs != end_pt.crs:
             raise Exception("Both points must have same CRS")
 
         if start_pt.dist2DWith(end_pt) == 0.0:
@@ -102,6 +102,7 @@ class LinearProfiler:
             self.densify_dist()
         )
 
+    @property
     def crs(self) -> Crs:
         """
         Returns the CRS of the profile.
@@ -110,7 +111,7 @@ class LinearProfiler:
         :rtype: Crs.
         """
 
-        return Crs(self._crs.epsg())
+        return self._crs
 
     def epsg(self) -> numbers.Integral:
         """
@@ -120,7 +121,7 @@ class LinearProfiler:
         :rtype: numbers.Real.
         """
 
-        return self.crs().epsg()
+        return self.crs.epsg()
 
     def clone(self) -> 'LinearProfiler':
         """
@@ -322,7 +323,7 @@ class LinearProfiler:
         if not isinstance(grid, GeoArray):
             raise Exception("Input grid must be a GeoArray but is {}".format(type(grid)))
 
-        if self.crs() != grid.crs():
+        if self.crs != grid.crs:
             raise Exception("Input grid EPSG code must be {} but is {}".format(self.epsg(), grid.epsg()))
 
         return array('d', [grid.interpolate_bilinear(pt_2d.x, pt_2d.y) for pt_2d in self.densified_points()])
@@ -372,6 +373,36 @@ class LinearProfiler:
 
         return grid_profiles
 
+    def intersect_line(self,
+        line: Line
+    ) -> List[Optional[Point, Segment]]:
+        """
+        Calculates the intersection with a line.
+
+        :param line: the line to intersect
+        :type line: Line
+        :return: the possible intersections
+        :rtype: List[Optional[Point, Segment]]
+        """
+
+        profiler_segment = self.segment()
+
+        return profiler_segment.intersectLine(line)
+
+    def intersect_lines(self,
+        lines
+    ) -> List[List[Optional[Point, Segment]]]:
+        """
+        Calculates the intersection with a set of line.
+
+        :param lines:
+        :type lines:
+        :return:
+        :rtype: List[List[Optional[Point, Segment]]]
+        """
+
+        return [self.intersect_line(line) for line in lines]
+
     def point_signed_s(
             self,
             pt: Point) -> numbers.Real:
@@ -393,7 +424,7 @@ class LinearProfiler:
         if not isinstance(pt, Point):
             raise Exception("Projected point should be Point but is {}".format(type(pt)))
 
-        if self.crs() != pt.crs():
+        if self.crs != pt.crs:
             raise Exception("Projected point should have {} EPSG but has {}".format(self.epsg(), pt.epsg()))
 
         if not self.point_in_profile(pt):
@@ -458,7 +489,7 @@ class LinearProfiler:
         if not isinstance(structural_pt, Point):
             raise Exception("Structural point should be Point but is {}".format(type(structural_pt)))
 
-        if self.crs() != structural_pt.crs():
+        if self.crs != structural_pt.crs:
             raise Exception("Structural point should have {} EPSG but has {}".format(self.epsg(), structural_pt.epsg()))
 
         axis_versor = map_axis.asDirect().asVersor()
@@ -490,7 +521,7 @@ class LinearProfiler:
         if not isinstance(attitude_pt, Point):
             raise Exception("Attitude point should be Point but is {}".format(type(attitude_pt)))
 
-        if self.crs() != attitude_pt.crs():
+        if self.crs != attitude_pt.crs:
             raise Exception("Attitude point should has EPSG {} but has {}".format(self.epsg(), attitude_pt.epsg()))
 
         putative_inters_versor = self.vertical_plane().intersVersor(attitude_plane.toCPlane(attitude_pt))
@@ -516,7 +547,7 @@ class LinearProfiler:
         if not isinstance(georef_attitude, GeorefAttitude):
             raise Exception("georef_attitude point should be GeorefAttitude but is {}".format(type(georef_attitude)))
 
-        if self.crs() != georef_attitude.posit.crs():
+        if self.crs != georef_attitude.posit.crs:
             raise Exception("Attitude point should has EPSG {} but has {}".format(self.epsg(), georef_attitude.posit.epsg()))
 
         attitude_cplane = georef_attitude.attitude.toCPlane(georef_attitude.posit)
@@ -552,7 +583,7 @@ class LinearProfiler:
         if not isinstance(georef_attitude, GeorefAttitude):
             raise Exception("Georef attitude should be GeorefAttitude but is {}".format(type(georef_attitude)))
 
-        if self.crs() != georef_attitude.posit.crs():
+        if self.crs != georef_attitude.posit.crs:
             raise Exception("Attitude point should has EPSG {} but has {}".format(self.epsg(), georef_attitude.posit.epsg()))
 
         if map_axis:
@@ -867,7 +898,7 @@ def extract_multiline2d_list(structural_line_layer, project_crs):
                                             line_orig_crs_MultiLine2D_list]
 
     # get CRS information
-    structural_line_layer_crs = structural_line_layer.crs()
+    structural_line_layer_crs = structural_line_layer.crs
 
     # project input line layer to project CRS
     line_proj_crs_MultiLine2D_list = [multiline_project(multiline2d, structural_line_layer_crs, project_crs) for
