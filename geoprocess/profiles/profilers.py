@@ -375,23 +375,23 @@ class LinearProfiler:
 
     def intersect_line(self,
         line: Line
-    ) -> List[Optional[Point, Segment]]:
+    ) -> List[Optional[Union[Point, Segment]]]:
         """
         Calculates the intersection with a line.
 
         :param line: the line to intersect
         :type line: Line
         :return: the possible intersections
-        :rtype: List[Optional[Point, Segment]]
+        :rtype: List[Optional[Union[Point, Segment]]]
         """
 
         profiler_segment = self.segment()
 
-        return profiler_segment.intersectLine(line)
+        return line.intersectSegment(profiler_segment)
 
     def intersect_lines(self,
         lines
-    ) -> List[List[Optional[Point, Segment]]]:
+    ) -> List[List[Optional[Union[Point, Segment]]]]:
         """
         Calculates the intersection with a set of line.
 
