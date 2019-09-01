@@ -57,7 +57,7 @@ class Attitude:
             self.dist
         )
 
-    def plot_segment(
+    def create_segment_for_plot(
             self,
             profile_length: numbers.Real,
             vertical_exaggeration: numbers.Real = 1,

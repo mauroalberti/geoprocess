@@ -8,7 +8,12 @@ from pygsf.spatial.vectorial.geometries import Line
 from pygsf.spatial.rasters.geoarray import GeoArray
 
 
-def plot_grid(geo_array: GeoArray, level_ndx: int = 0, cmap="jet", width: numbers.Real = 18.5, height: numbers.Real = 10.5) -> Figure:
+def plot_grid(
+    geo_array: GeoArray,
+    level_ndx: int = 0,
+    cmap="jet", width: numbers.Real = 18.5,
+    height: numbers.Real = 10.5
+) -> Figure:
     """
     Plot a grid with geographic coordinates.
 
@@ -24,7 +29,6 @@ def plot_grid(geo_array: GeoArray, level_ndx: int = 0, cmap="jet", width: number
     :type height: numbers.Real.
     :return: Figure.
     :raise: Exception when grid has rotation.
-
     """
 
     if geo_array.has_rotation:
@@ -42,7 +46,10 @@ def plot_grid(geo_array: GeoArray, level_ndx: int = 0, cmap="jet", width: number
     return fig
 
 
-def plot_line(fig: Figure, line: Line) -> Figure:
+def plot_line(
+    fig: Figure,
+    line: Line
+) -> Figure:
     """
     Plot a line.
 

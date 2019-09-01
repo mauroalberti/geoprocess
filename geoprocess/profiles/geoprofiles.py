@@ -80,6 +80,7 @@ class GeoProfile:
 
         self._topo_profile = None
 
+    '''
     def plot_topo_profile(self,
           aspect: numbers.Real = 1,
           width: numbers.Real = 18.5,
@@ -113,6 +114,7 @@ class GeoProfile:
             )
 
         self.fig = fig
+    '''
 
     @property
     def attitudes(self):
@@ -149,6 +151,55 @@ class GeoProfile:
 
         self._attitudes = None
 
+    @property
+    def lines_intersections(self):
+        """
+
+        :return:
+        """
+
+        return self._lines_intersections
+
+    @lines_intersections.setter
+    def lines_intersections(self,
+                            lines_intersections: LinesIntersections):
+        """
+        Set the line intersections content.
+
+        :param lines_intersections: line intersections.
+        :type lines_intersections: LinesIntersections.
+        :return:
+        """
+
+        check_type(lines_intersections, "Line intersections", LinesIntersections)
+
+        self._lines_intersections = lines_intersections
+
+    @property
+    def polygons_intersections(self):
+        """
+
+        :return:
+        """
+
+        return self._polygons_intersections
+
+    @polygons_intersections.setter
+    def polygons_intersections(self,
+        polygons_intersections: PolygonsIntersections):
+        """
+        Set the polygons intersections content.
+
+        :param polygons_intersections: polygons intersections.
+        :type polygons_intersections: PolygonsIntersections.
+        :return:
+        """
+
+        check_type(polygons_intersections, "Polygons intersections", PolygonsIntersections)
+
+        self._polygons_intersections = polygons_intersections
+
+    '''
     def plot_attitudes(self, color="red"):
         """
 
@@ -160,11 +211,13 @@ class GeoProfile:
             self.length_2d(),
             color=color
         )
+    '''
 
+    '''
     def plot(self,
              topo_profile=True,
              attitudes=True,
-             line_intersections=True,
+             lines_intersections=True,
              polygon_intersections=True,
              topo_profile_color="blue",
              attitudes_color="red",
@@ -178,7 +231,7 @@ class GeoProfile:
 
         :param topo_profile:
         :param attitudes:
-        :param line_intersections:
+        :param lines_intersections:
         :param polygon_intersections:
         :param line_projections:
         :return:
@@ -215,7 +268,7 @@ class GeoProfile:
                 color=attitudes_color
             )
 
-        if line_intersections and self._lines_intersections:
+        if lines_intersections and self._lines_intersections:
 
             self._lines_intersections.plot(
                 fig,
@@ -229,6 +282,7 @@ class GeoProfile:
                 fig,
                 self.length_2d()
             )
+    '''
 
     def s_min(self):
         """

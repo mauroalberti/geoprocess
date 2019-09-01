@@ -7,7 +7,7 @@ from array import array
 from pygsf.utils.types import *
 
 
-from .elements import *
+from geoprocess.profiles.elements import *
 
 
 class TopographicProfile():
@@ -124,6 +124,7 @@ class Attitudes(list):
 
         super(Attitudes, self).__init__(atts)
 
+    '''
     def plot(
             self,
             fig,
@@ -163,16 +164,17 @@ class Attitudes(list):
         for structural_attitude in self:
             if 0.0 <= structural_attitude.s <= section_length:
 
-                structural_segment_s, structural_segment_z = structural_attitude.plot_segment(
+                structural_segment_s, structural_segment_z = structural_attitude.create_segment_for_plot(
                     section_length,
                     vertical_exaggeration)
 
                 fig.gca().plot(structural_segment_s, structural_segment_z, '-', color=color)
 
         return fig
+    '''
 
 
-class LinesIntersections:
+class LinesIntersections(list):
 
     def __init__(self, atts: List[LineIntersection]):
 
@@ -183,6 +185,6 @@ class LinesIntersections:
         super(LinesIntersections, self).__init__(atts)
 
 
-class PolygonsIntersections:
+class PolygonsIntersections(list):
 
     pass
