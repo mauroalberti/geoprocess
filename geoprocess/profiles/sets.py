@@ -354,7 +354,7 @@ def plot_profiles(
 
     ax.set_aspect(aspect)
 
-    s = profiles.s()
+    s = profiles.s_arr()
 
     for z in profiles.zs():
         if z:

@@ -88,8 +88,8 @@ def _(
         topo_color = kargs.get("topo_color", "blue")
 
         ax.plot(
-            geoprofile.topo_profile.s(),
-            geoprofile.topo_profile.z(),
+            geoprofile.topo_profile.s_arr(),
+            geoprofile.topo_profile.z_arr(),
             color=topo_color
         )
 

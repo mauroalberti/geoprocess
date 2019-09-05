@@ -1,7 +1,8 @@
 
-from typing import List
+from typing import List, Optional
 
 from array import array
+import numpy as np
 
 
 from pygsf.utils.types import *
@@ -10,7 +11,7 @@ from pygsf.utils.types import *
 from geoprocess.profiles.elements import *
 
 
-class TopographicProfile():
+class TopographicProfile:
     """
 
     """
@@ -25,15 +26,15 @@ class TopographicProfile():
 
         check_type(z_array, "Scalar values array", array)
         if z_array.typecode != 'd':
-            raise Exception("All z arrays must be of type double")
+            raise Exception("z array must be of type double")
         if len(z_array) != num_steps:
-            raise Exception("All z arrays must have the same length of s array")
+            raise Exception("z array must have the same length of s array")
 
         self._num_steps = num_steps
         self._s = s_array
         self._z = z_array
 
-    def s(self) -> array:
+    def s_arr(self) -> array:
         """
         Return the s array.
 
@@ -43,7 +44,7 @@ class TopographicProfile():
 
         return self._s
 
-    def z(self) -> array:
+    def z_arr(self) -> array:
         """
         Return the z arrays.
 
@@ -52,6 +53,34 @@ class TopographicProfile():
         """
 
         return self._z
+
+    def z(self,
+        ndx: numbers.Integral
+    ) -> numbers.Real:
+        """
+        Returns the z value with the index ndx.
+
+        :param ndx: the index in the z array
+        :type ndx: numbers.Integral
+        :return: the z value corresponding to the ndx index
+        :rtype: numbers.Real
+        """
+
+        return self.z_arr()[ndx]
+
+    def s(self,
+        ndx: numbers.Integral
+    ) -> numbers.Real:
+        """
+        Returns the s value with the index ndx.
+
+        :param ndx: the index in the s array
+        :type ndx: numbers.Integral
+        :return: the s value corresponding to the ndx index
+        :rtype: numbers.Real
+        """
+
+        return self.s_arr()[ndx]
 
     def s_min(self) -> numbers.Real:
         """
@@ -111,7 +140,107 @@ class TopographicProfile():
         :rtype: numbers.Real.
         """
 
-        return self.s()[-1]
+        return self.s_arr()[-1]
+
+    def index_s(self,
+                s_val: numbers.Real
+                ) -> Optional[numbers.Integral]:
+        """
+        Returns the optional index in the s array of the provided value.
+
+        :param s_val: the value to search the index for in the s array
+        :type s_val: numbers.Real
+        :return: the optional index in the s array of the provided value
+        :rtype: Optional[numbers.Integral]
+
+        Examples:
+          >>> p = TopographicProfile(array('d', [ 0.0,  1.0,  2.0,  3.0, 3.14]), array('d', [10.0, 20.0, 0.0, 14.5, 17.9]))
+          >>> p.index_s(-1) is None
+          True
+          >>> p.index_s(5) is None
+          True
+          >>> p.index_s(0.5)
+          1
+          >>> p.index_s(0.75)
+          1
+          >>> p.index_s(1.0)
+          1
+          >>> p.index_s(2.5)
+          3
+          >>> p.index_s(3.14)
+          4
+          >>> p.index_s(0.0)
+          0
+        """
+
+        check_type(s_val, "Input value", numbers.Real)
+
+        if s_val < self.s_min() or s_val > self.s_max():
+            return None
+
+        return np.searchsorted(self.s_arr(), s_val)
+
+    def sample_z(self,
+                s_val: numbers.Real
+                ) -> Optional[numbers.Integral]:
+        """
+        Returns the optional interpolated z value in the z array of the provided s value.
+
+        :param s_val: the value to search the index for in the s array
+        :type s_val: numbers.Real
+        :return: the optional index in the s array of the provided value
+        :rtype: Optional[numbers.Integral]
+
+        Examples:
+          >>> p = TopographicProfile(array('d', [ 0.0,  1.0,  2.0,  3.0, 3.14]), array('d', [10.0, 20.0, 0.0, 14.5, 17.9]))
+          >>> p.sample_z(-1) is None
+          True
+          >>> p.sample_z(5) is None
+          True
+          >>> p.sample_z(0.5)
+          15.0
+          >>> p.sample_z(0.75)
+          17.5
+          >>> p.sample_z(2.5)
+          7.25
+          >>> p.sample_z(3.14)
+          17.9
+          >>> p.sample_z(0.0)
+          10.0
+          >>> p.sample_z(1.0)
+          20.0
+        """
+
+        check_type(s_val, "Input value", numbers.Real)
+
+        ndx = self.index_s(s_val)
+
+        if ndx is not None:
+
+            if ndx == 0:
+                return self.z(0)
+
+            val_z_i = self.z(ndx-1)
+            val_z_i_next = self.z(ndx)
+            delta_val_z = val_z_i_next - val_z_i
+
+            if delta_val_z == 0.0:
+                return val_z_i
+
+            val_s_i = self.s(ndx-1)
+            val_s_i_next = self.s(ndx)
+            delta_val_s = val_s_i_next - val_s_i
+
+            if delta_val_s == 0.0:
+                return val_z_i
+
+            d_s = s_val - val_s_i
+
+            return val_z_i + d_s*delta_val_z/delta_val_s
+
+        else:
+
+            return None
 
 
 class Attitudes(list):

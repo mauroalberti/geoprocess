@@ -1,5 +1,5 @@
 
-from typing import List
+from typing import List, Iterable
 from operator import attrgetter
 
 from math import acos
@@ -9,12 +9,14 @@ from pygsf.spatial.rasters.geoarray import *
 from ..geology.base import GeorefAttitude
 
 from .sets import *
-
+y
 
 class LinearProfiler:
     """
     Class storing a linear (straight) profile.
-    It is contained intersect a vertical plane, assuming a Cartesian x-y-z frame.
+    It intends to represent a vertical profile.
+    In a possible future implementations, it would be superseded by a
+    plane profiler, not necessarily vertical.
     """
 
     def __init__(self,
@@ -347,61 +349,68 @@ class LinearProfiler:
             s_array=self.densified_steps(),
             z_array=self.sample_grid(geoarray))
 
-
     def profile_grids(self,
-            *grids: Tuple[GeoArray]) -> Optional[TopographicProfile]:
+        *grids: Iterable[GeoArray]
+    ) -> List[TopographicProfile]:
         """
         Create profiles of one or more grids.
 
         :param grids: a set of grids, one or more.
-        :type grids: tuple of GeoArray instances.
+        :type grids: Iterable[GeoArray]
         :return:
         :rtype:
         """
 
+        for ndx, grid in enumerate(grids):
+
+            check_type(grid, "{} grid".format(ndx+1), GeoArray)
+
+        for ndx, grid in enumerate(grids):
+
+            check_crs(self, grid)
+
+        topo_profiles = []
+
         for grid in grids:
-            if not isinstance(grid, GeoArray):
-                return None
 
-        grid_profiles = TopographicProfile(
-            s_array=self.densified_steps())
+            topo_profiles.append(
+                TopographicProfile(
+                    s_array=self.densified_steps(),
+                    z_array=self.sample_grid(grid)
+                )
+            )
 
-        for grid in grids:
-
-            grid_profiles.add_zs(
-                z_array=self.sample_grid(grid))
-
-        return grid_profiles
+        return topo_profiles
 
     def intersect_line(self,
-        line: Line
+       mline: Union[Line, MultiLine],
     ) -> List[Optional[Union[Point, Segment]]]:
         """
-        Calculates the intersection with a line.
+        Calculates the intersection with a line/multiline.
+        Note: the intersections are intended flat (in a 2D plane, not 3D).
 
-        :param line: the line to intersect
-        :type line: Line
+        :param mline: the line/multiline to intersect profile with
+        :type mline: Union[Line, MultiLine]
         :return: the possible intersections
         :rtype: List[Optional[Union[Point, Segment]]]
         """
 
-        profiler_segment = self.segment()
-
-        return line.intersectSegment(profiler_segment)
+        return mline.intersectSegment(self.segment())
 
     def intersect_lines(self,
-        lines
+        mlines: Iterable[Union[Line, MultiLine]],
     ) -> List[List[Optional[Union[Point, Segment]]]]:
         """
-        Calculates the intersection with a set of line.
+        Calculates the intersection with a set of lines/multilines.
+        Note: the intersections are intended flat (in a 2D plane, not 3D).
 
-        :param lines:
-        :type lines:
-        :return:
+        :param mlines: an iterable of Lines or MultiLines to intersect profile with
+        :type mlines: Iterable[Union[Line, MultiLine]]
+        :return: the possible intersections
         :rtype: List[List[Optional[Point, Segment]]]
         """
 
-        return [self.intersect_line(line) for line in lines]
+        return [self.intersect_line(line) for line in mlines]
 
     def point_signed_s(
             self,
@@ -824,39 +833,6 @@ class ParallelProfilers(list):
 
         return TopographicProfileSet(topo_profiles)
 
-
-def calculate_profile_lines_intersection(multilines2d_list, id_list, profile_line2d):
-    """
-
-    :param multilines2d_list:
-    :param id_list:
-    :param profile_line2d:
-    :return:
-    """
-
-    profile_segment2d_list = profile_line2d.as_segments()
-
-    profile_segment2d = profile_segment2d_list[0]
-
-    intersection_list = []
-    for ndx, multiline2d in enumerate(multilines2d_list):
-        if id_list is None:
-            multiline_id = ''
-        else:
-            multiline_id = id_list[ndx]
-        for line2d in multiline2d.lines:
-            for line_segment2d in line2d.as_segments():
-                try:
-                    intersection_point2d = profile_segment2d.intersection_2d_pt(line_segment2d)
-                except ZeroDivisionError:
-                    continue
-                if intersection_point2d is None:
-                    continue
-                if line_segment2d.contains_2d_pt(intersection_point2d) and \
-                   profile_segment2d.contains_2d_pt(intersection_point2d):
-                    intersection_list.append([intersection_point2d, multiline_id])
-
-    return intersection_list
 
 
 def intersection_distances_by_profile_start_list(profile_line, intersections):
