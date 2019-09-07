@@ -1,16 +1,46 @@
 
-from functools import singledispatch
+from warnings import warn
 
-from matplotlib import gridspec
+from functools import singledispatch, partial
+
+
 from matplotlib.figure import Figure
-import matplotlib.pyplot as plt
 
-from ..widgets.mpl_widget import MplWidget
 
 from geoprocess.profiles.geoprofiles import *
 
 
 z_padding = 0.2
+
+
+def parse_point_on_profile(
+        topo_profile: TopographicProfile,
+        point: Point
+) -> PlotPoint:
+
+    pass
+
+
+def parse_segment_on_profile(
+        topo_profile: TopographicProfile,
+        segment: Segment
+) -> PlotSegment:
+
+    pass
+
+
+def parse_intersections(
+    topo_profile: TopographicProfile,
+    lines_intersections: LinesIntersections
+) -> Tuple[List, List]:
+
+    point_intersections = filter(lambda intersection: isinstance(intersection.geom, Point), lines_intersections)
+    segment_intersections = filter_segments(lines_intersections)
+
+    plot_points = list(map(partial(parse_point_on_profile, topo_profile=topo_profile), point_intersections))
+    plot_segments = list(map(partial(parse_segment_on_profile, topo_profile=topo_profile), segment_intersections))
+
+    return plot_points, plot_segments
 
 
 @singledispatch
@@ -127,7 +157,16 @@ def _(
 
     if geoprofile.lines_intersections:
 
-        pass
+        if not geoprofile.topo_profile:
+
+            warn('Topographic profile is not defined, so intersections cannot be plotted')
+
+        else:
+
+            intersection_points, intersection_segments = parse_intersections(
+                geoprofile.topo_profile,
+                geoprofile.lines_intersections
+            )
 
     if geoprofile.polygons_intersections:
 

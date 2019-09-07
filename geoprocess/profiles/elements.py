@@ -121,3 +121,10 @@ class LineIntersections:
         self._id = id
         self._inter_geoms = inter_geoms
 
+    def points(self) -> List[Tuple[numbers.Integral, Point]]:
+        """
+        Returns a list of the points coupled with their index.
+
+        :return:
+        """
+

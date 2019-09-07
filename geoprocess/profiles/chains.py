@@ -142,9 +142,9 @@ class TopographicProfile:
 
         return self.s_arr()[-1]
 
-    def index_s(self,
-                s_val: numbers.Real
-                ) -> Optional[numbers.Integral]:
+    def s_upper_index(self,
+        s_val: numbers.Real
+    ) -> Optional[numbers.Integral]:
         """
         Returns the optional index in the s array of the provided value.
 
@@ -155,21 +155,25 @@ class TopographicProfile:
 
         Examples:
           >>> p = TopographicProfile(array('d', [ 0.0,  1.0,  2.0,  3.0, 3.14]), array('d', [10.0, 20.0, 0.0, 14.5, 17.9]))
-          >>> p.index_s(-1) is None
+          >>> p.s_upper_index(-1) is None
           True
-          >>> p.index_s(5) is None
+          >>> p.s_upper_index(5) is None
           True
-          >>> p.index_s(0.5)
+          >>> p.s_upper_index(0.5)
           1
-          >>> p.index_s(0.75)
+          >>> p.s_upper_index(0.75)
           1
-          >>> p.index_s(1.0)
+          >>> p.s_upper_index(1.0)
           1
-          >>> p.index_s(2.5)
+          >>> p.s_upper_index(2.0)
+          2
+          >>> p.s_upper_index(2.5)
           3
-          >>> p.index_s(3.14)
+          >>> p.s_upper_index(3.11)
           4
-          >>> p.index_s(0.0)
+          >>> p.s_upper_index(3.14)
+          4
+          >>> p.s_upper_index(0.0)
           0
         """
 
@@ -180,7 +184,7 @@ class TopographicProfile:
 
         return np.searchsorted(self.s_arr(), s_val)
 
-    def sample_z(self,
+    def z_for_s(self,
                 s_val: numbers.Real
                 ) -> Optional[numbers.Integral]:
         """
@@ -193,27 +197,27 @@ class TopographicProfile:
 
         Examples:
           >>> p = TopographicProfile(array('d', [ 0.0,  1.0,  2.0,  3.0, 3.14]), array('d', [10.0, 20.0, 0.0, 14.5, 17.9]))
-          >>> p.sample_z(-1) is None
+          >>> p.z_for_s(-1) is None
           True
-          >>> p.sample_z(5) is None
+          >>> p.z_for_s(5) is None
           True
-          >>> p.sample_z(0.5)
+          >>> p.z_for_s(0.5)
           15.0
-          >>> p.sample_z(0.75)
+          >>> p.z_for_s(0.75)
           17.5
-          >>> p.sample_z(2.5)
+          >>> p.z_for_s(2.5)
           7.25
-          >>> p.sample_z(3.14)
+          >>> p.z_for_s(3.14)
           17.9
-          >>> p.sample_z(0.0)
+          >>> p.z_for_s(0.0)
           10.0
-          >>> p.sample_z(1.0)
+          >>> p.z_for_s(1.0)
           20.0
         """
 
         check_type(s_val, "Input value", numbers.Real)
 
-        ndx = self.index_s(s_val)
+        ndx = self.s_upper_index(s_val)
 
         if ndx is not None:
 
@@ -241,6 +245,107 @@ class TopographicProfile:
         else:
 
             return None
+
+    def z_arr_for_s_range(self,
+        s_start: numbers.Real,
+        s_end: Optional[numbers.Real] = None
+    ) -> array:
+        """
+        Return the z array values defined by the provided s range (extremes included).
+        When the end value is not provided, a single-valued array is returned.
+
+        :param s_start: the start s value (distance along the profile)
+        :type s_start: numbers.Real
+        :param s_end: the optional end s value (distance along the profile)
+        :type s_end: numbers.Real
+        :return: the z array, possibly with just a value
+        :rtype: array
+
+        Examples:
+          >>> p = TopographicProfile(array('d', [ 0.0,  1.0,  2.0,  3.0, 3.14]), array('d', [10.0, 20.0, 0.0, 14.5, 17.9]))
+          >>> p.z_arr_for_s_range(1.0)
+          array('d', [20.0])
+          >>> p.z_arr_for_s_range(0.0)
+          array('d', [10.0])
+          >>> p.z_arr_for_s_range(0.75)
+          array('d', [17.5])
+          >>> p.z_arr_for_s_range(3.14)
+          array('d', [17.9])
+          >>> p.z_arr_for_s_range(1.0, 2.0)
+          array('d', [20.0, 0.0])
+          >>> p.z_arr_for_s_range(0.75, 2.0)
+          array('d', [17.5, 20.0, 0.0])
+          >>> p.z_arr_for_s_range(0.75, 2.5)
+          array('d', [17.5, 20.0, 0.0, 7.25])
+          >>> p.z_arr_for_s_range(0.75, 3.0)
+          array('d', [17.5, 20.0, 0.0, 14.5])
+          >>> p.z_arr_for_s_range(0.75, 0.5)
+          NotImplemented
+          >>> p.z_arr_for_s_range(-1, 1)
+          NotImplemented
+          >>> p.z_arr_for_s_range(-1)
+          NotImplemented
+          >>> p.z_arr_for_s_range(0.0, 10)
+          NotImplemented
+          >>> p.z_arr_for_s_range(0.0, 10)
+          NotImplemented
+          >>> p.z_arr_for_s_range(0.0, 3.14)
+          array('d', [10.0, 20.0, 0.0, 14.5, 17.9])
+        """
+
+        if s_start < self.s_min():
+
+            return NotImplemented
+
+        elif s_start > self.s_max():
+
+            return NotImplemented
+
+        elif s_end is None or s_end == s_start:
+
+            return array('d', [self.z_for_s(s_start)])
+
+        elif s_end < s_start:
+
+            return NotImplemented
+
+        elif s_end > self.s_max():
+
+            return NotImplemented
+
+        else:
+
+            result = array('d', [])
+
+            s_start_upper_index_value = self.s_upper_index(s_start)
+            s_end_upper_index_value = self.s_upper_index(s_end)
+
+            if s_start < self.s(s_start_upper_index_value):
+                result.append(self.z_for_s(s_start))
+
+            for ndx in range(s_start_upper_index_value, s_end_upper_index_value):
+                result.append(self.z(ndx))
+
+            if s_end > self.s(s_end_upper_index_value - 1):
+                result.append(self.z_for_s(s_end))
+
+            return result
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 class Attitudes(list):
