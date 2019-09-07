@@ -1,7 +1,6 @@
 
-import numbers
 
-from math import radians, sin, cos, sqrt
+from pygsf.spatial.vectorial.geometries import *
 
 
 class Attitude:
@@ -104,7 +103,7 @@ class Attitude:
         return structural_segment_s, structural_segment_z
 
 
-class LineIntersection:
+class LineIntersections:
     """
 
     """
@@ -112,10 +111,13 @@ class LineIntersection:
     def __init__(
         self,
         id: int,
-        s: numbers.Real,
-        z: numbers.Real
+        inter_geoms: List[Union[Point, Segment]]
     ):
 
-        self.id = id
-        self.s = s
-        self.z = z
+        check_type(id, "Line index", numbers.Integral)
+        for geom in inter_geoms:
+            check_type(geom, "Intersection geometry", (Point, Segment))
+
+        self._id = id
+        self._inter_geoms = inter_geoms
+

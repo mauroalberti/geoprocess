@@ -305,11 +305,11 @@ class Attitudes(list):
 
 class LinesIntersections(list):
 
-    def __init__(self, atts: List[LineIntersection]):
+    def __init__(self, atts: List[LineIntersections]):
 
         check_type(atts, "Lines intersections", List)
         for el in atts:
-            check_type(el, "Lines intersections", LineIntersection)
+            check_type(el, "Lines intersections", LineIntersections)
 
         super(LinesIntersections, self).__init__(atts)
 

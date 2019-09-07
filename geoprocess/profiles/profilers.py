@@ -9,7 +9,7 @@ from pygsf.spatial.rasters.geoarray import *
 from ..geology.base import GeorefAttitude
 
 from .sets import *
-y
+
 
 class LinearProfiler:
     """
@@ -410,7 +410,11 @@ class LinearProfiler:
         :rtype: List[List[Optional[Point, Segment]]]
         """
 
-        return [self.intersect_line(line) for line in mlines]
+        results = [self.intersect_line(mline) for mline in mlines]
+        valid_results = [LineIntersections(ndx, res) for ndx, res in enumerate(results) if res]
+
+        return LinesIntersections(valid_results)
+
 
     def point_signed_s(
             self,
