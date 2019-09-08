@@ -162,7 +162,7 @@ class GeoProfile:
 
     @lines_intersections.setter
     def lines_intersections(self,
-                            lines_intersections: LinesIntersections):
+        lines_intersections: ProfileSubpartsSet):
         """
         Set the line intersections content.
 
@@ -171,7 +171,7 @@ class GeoProfile:
         :return:
         """
 
-        check_type(lines_intersections, "Line intersections", LinesIntersections)
+        check_type(lines_intersections, "Line intersections", ProfileSubpartsSet)
 
         self._lines_intersections = lines_intersections
 

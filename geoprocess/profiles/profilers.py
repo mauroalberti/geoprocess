@@ -298,7 +298,7 @@ class LinearProfiler:
 
     def point_distance(self, pt: Point) -> numbers.Real:
         """
-        Calcultes the point distance from the profiler plane.
+        Calculates the point distance from the profiler plane.
 
         :param pt: the point to check.
         :type pt: Point.
@@ -415,7 +415,6 @@ class LinearProfiler:
 
         return LinesIntersections(valid_results)
 
-
     def point_signed_s(
             self,
             pt: Point) -> numbers.Real:
@@ -447,6 +446,43 @@ class LinearProfiler:
         cos_alpha = self.vector().angleCos(projected_vector)
 
         return projected_vector.len3D * cos_alpha
+
+    def segment_signed_s(self,
+        segment: Segment
+    ) -> Tuple[numbers.Real, numbers.Real]:
+        """
+        Calculates the segment signed distances from the profiles start.
+        The segment must already lay in the profile vertical plane, otherwise an exception is raised.
+
+        :param segment: the analysed segment
+        :type segment: Segment
+        :return: the segment vertices distances from the profile start
+        :rtype: Tuple[numbers.Real, numbers.Real]
+        """
+
+        segment_start_distance = self.point_signed_s(segment.start_pt)
+        segment_end_distance = self.point_signed_s(segment.end_pt)
+
+        return segment_start_distance, segment_end_distance
+
+    def pt_segm_signed_s(self,
+        geom: Union[Point, Segment]
+    ) -> array:
+        """
+        Calculates the point or segment signed distances from the profiles start.
+
+        :param geom: point or segment
+        :type: Union[Point, Segment]
+        :return: the distance(s) from the profile start
+        :rtype: array of double
+        """
+
+        if isinstance(geom, Point):
+            return array('d', [self.point_signed_s(geom)])
+        elif isinstance(geom, Segment):
+            return array('d', [*self.segment_signed_s(geom)])
+        else:
+            return NotImplemented
 
     def get_intersection_slope(self,
                 intersection_vector: Vect) -> Tuple[numbers.Real, str]:
@@ -714,6 +750,31 @@ class LinearProfiler:
                     continue
 
         return Attitudes(sorted(results, key=attrgetter('s')))
+
+    def parse_intersections_for_profile(self,
+        lines_intersections: LinesIntersections
+    ) -> List:
+        """
+        Parse the line intersections for incorporation
+        as elements in a geoprofile.
+
+        :param lines_intersections: the line intersections
+        :type lines_intersections: LinesIntersections
+        :return:
+        """
+
+        parsed_intersections = ProfileSubpartsSet()
+
+        for line_intersections in lines_intersections:
+
+            line_id = line_intersections.line_id
+            inters_geoms = line_intersections.geoms
+
+            intersections_ranges = [self.pt_segm_signed_s(geom) for geom in inters_geoms]
+
+            parsed_intersections.append(ProfileSubpart(line_id, intersections_ranges))
+
+        return parsed_intersections
 
 
 class ParallelProfilers(list):

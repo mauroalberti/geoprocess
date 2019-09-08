@@ -13,35 +13,6 @@ from geoprocess.profiles.geoprofiles import *
 z_padding = 0.2
 
 
-def parse_point_on_profile(
-        topo_profile: TopographicProfile,
-        point: Point
-) -> PlotPoint:
-
-    pass
-
-
-def parse_segment_on_profile(
-        topo_profile: TopographicProfile,
-        segment: Segment
-) -> PlotSegment:
-
-    pass
-
-
-def parse_intersections(
-    topo_profile: TopographicProfile,
-    lines_intersections: LinesIntersections
-) -> Tuple[List, List]:
-
-    point_intersections = filter(lambda intersection: isinstance(intersection.geom, Point), lines_intersections)
-    segment_intersections = filter_segments(lines_intersections)
-
-    plot_points = list(map(partial(parse_point_on_profile, topo_profile=topo_profile), point_intersections))
-    plot_segments = list(map(partial(parse_segment_on_profile, topo_profile=topo_profile), segment_intersections))
-
-    return plot_points, plot_segments
-
 
 @singledispatch
 def plot(

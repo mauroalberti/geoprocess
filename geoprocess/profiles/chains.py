@@ -11,6 +11,22 @@ from pygsf.utils.types import *
 from geoprocess.profiles.elements import *
 
 
+class ProfileSubpartsSet(list):
+    """
+    Describes subelements (point or segment-type) of a profile
+    """
+
+    def __init__(self,
+        subelements: Optional[List] = None):
+        """
+        """
+
+        if subelements is None:
+            subelements = []
+
+        super(ProfileSubpartsSet, self).__init__(subelements)
+
+
 class TopographicProfile:
     """
 
@@ -330,22 +346,6 @@ class TopographicProfile:
                 result.append(self.z_for_s(s_end))
 
             return result
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 class Attitudes(list):

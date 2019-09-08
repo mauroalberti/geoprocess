@@ -110,21 +110,76 @@ class LineIntersections:
 
     def __init__(
         self,
-        id: int,
-        inter_geoms: List[Union[Point, Segment]]
+        line_id: int,
+        geoms: List[Union[Point, Segment]]
     ):
 
-        check_type(id, "Line index", numbers.Integral)
-        for geom in inter_geoms:
+        check_type(line_id, "Line index", numbers.Integral)
+        for geom in geoms:
             check_type(geom, "Intersection geometry", (Point, Segment))
 
+        self._line_id = line_id
+        self._geoms = geoms
+
+    @property
+    def line_id(self) -> numbers.Integral:
+        """
+        Return line id.
+
+        :return: the line id
+        :rtype: numbers.Integral
+        """
+
+        return self._line_id
+
+    @property
+    def geoms(self) -> List[Union[Point, Segment]]:
+        """
+        Returns the intersecting geometries.
+
+        :return: the intersecting geometries.
+        :rtype: List[Union[Point, Segment]]
+        """
+
+        return self._geoms
+
+
+class ProfileSubpart:
+    """
+    A subset of a profile.
+    """
+
+    def __init__(self,
+        id: numbers.Integral,
+        parts: List[array]):
+
+        check_type(id, "Input id", numbers.Integral)
+        check_type(parts, "List of parts", list)
+        for part in parts:
+            check_type(part, "Part", array)
+
         self._id = id
-        self._inter_geoms = inter_geoms
+        self._parts = parts
 
-    def points(self) -> List[Tuple[numbers.Integral, Point]]:
+    @property
+    def id(self) -> numbers.Integral:
         """
-        Returns a list of the points coupled with their index.
+        Return id.
 
-        :return:
+        :return: the id
+        :rtype: numbers.Integral
         """
+
+        return self._id
+
+    @property
+    def parts(self) -> List[array]:
+        """
+        Returns the profile parts.
+
+        :return: the profile parts
+        :rtype: List[array]
+        """
+
+        return self._parts
 
