@@ -176,6 +176,7 @@ class ProfileSubpart:
     def parts(self) -> List[array]:
         """
         Returns the profile parts.
+        The arrays represent s values, i.e., distances from profile start.
 
         :return: the profile parts
         :rtype: List[array]

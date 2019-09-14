@@ -262,10 +262,86 @@ class TopographicProfile:
 
             return None
 
-    def z_arr_for_s_range(self,
+    def s_subset(self,
         s_start: numbers.Real,
         s_end: Optional[numbers.Real] = None
     ) -> array:
+        """
+        Return the s array values defined by the provided s range (extremes included).
+        When the end value is not provided, a single-valued array is returned.
+
+        :param s_start: the start s value (distance along the profile)
+        :type s_start: numbers.Real
+        :param s_end: the optional end s value (distance along the profile)
+        :type s_end: numbers.Real
+        :return: the s array subset, possibly with just a value
+        :rtype: array
+
+        Examples:
+          >>> p = TopographicProfile(array('d', [ 0.0,  1.0,  2.0,  3.0, 3.14]), array('d', [10.0, 20.0, 0.0, 14.5, 17.9]))
+          >>> p.s_subset(1.0)
+          array('d', [1.0])
+          >>> p.s_subset(0.0)
+          array('d', [0.0])
+          >>> p.s_subset(0.75)
+          array('d', [0.75])
+          >>> p.s_subset(3.14)
+          array('d', [3.14])
+          >>> p.s_subset(1.0, 2.0)
+          array('d', [1.0, 2.0])
+          >>> p.s_subset(0.75, 2.0)
+          array('d', [0.75, 1.0, 2.0])
+          >>> p.s_subset(0.75, 2.5)
+          array('d', [0.75, 1.0, 2.0, 2.5])
+          >>> p.s_subset(0.75, 3.0)
+          array('d', [0.75, 1.0, 2.0, 3.0])
+          >>> p.s_subset(0.75, 0.5)
+          NotImplemented
+          >>> p.s_subset(-1, 1)
+          NotImplemented
+          >>> p.s_subset(-1)
+          NotImplemented
+          >>> p.s_subset(0.0, 10)
+          NotImplemented
+          >>> p.s_subset(0.0, 10)
+          NotImplemented
+          >>> p.s_subset(0.0, 3.14)
+          array('d', [0.0,  1.0,  2.0,  3.0, 3.14])
+        """
+
+        if not s_end and not self.s_min() <= s_start <= self.s_max():
+
+            return NotImplemented
+
+        if s_end and not self.s_min() <= s_start <= s_end <= self.s_max():
+
+            return NotImplemented
+
+        if s_end is None or s_end == s_start:
+
+            return array('d', [s_start])
+
+        result = array('d', [])
+
+        s_start_upper_index_value = self.s_upper_index(s_start)
+
+        if s_start < self.s(s_start_upper_index_value):
+            result.append(s_start)
+
+        s_end_upper_index_value = self.s_upper_index(s_end)
+
+        for ndx in range(s_start_upper_index_value, s_end_upper_index_value):
+            result.append(self.s(ndx))
+
+        if s_end > self.s(s_end_upper_index_value - 1):
+            result.append(s_end)
+
+        return result
+
+    def zs_from_s_range(self,
+                        s_start: numbers.Real,
+                        s_end: Optional[numbers.Real] = None
+                        ) -> array:
         """
         Return the z array values defined by the provided s range (extremes included).
         When the end value is not provided, a single-valued array is returned.
@@ -279,73 +355,42 @@ class TopographicProfile:
 
         Examples:
           >>> p = TopographicProfile(array('d', [ 0.0,  1.0,  2.0,  3.0, 3.14]), array('d', [10.0, 20.0, 0.0, 14.5, 17.9]))
-          >>> p.z_arr_for_s_range(1.0)
+          >>> p.zs_from_s_range(1.0)
           array('d', [20.0])
-          >>> p.z_arr_for_s_range(0.0)
+          >>> p.zs_from_s_range(0.0)
           array('d', [10.0])
-          >>> p.z_arr_for_s_range(0.75)
+          >>> p.zs_from_s_range(0.75)
           array('d', [17.5])
-          >>> p.z_arr_for_s_range(3.14)
+          >>> p.zs_from_s_range(3.14)
           array('d', [17.9])
-          >>> p.z_arr_for_s_range(1.0, 2.0)
+          >>> p.zs_from_s_range(1.0, 2.0)
           array('d', [20.0, 0.0])
-          >>> p.z_arr_for_s_range(0.75, 2.0)
+          >>> p.zs_from_s_range(0.75, 2.0)
           array('d', [17.5, 20.0, 0.0])
-          >>> p.z_arr_for_s_range(0.75, 2.5)
+          >>> p.zs_from_s_range(0.75, 2.5)
           array('d', [17.5, 20.0, 0.0, 7.25])
-          >>> p.z_arr_for_s_range(0.75, 3.0)
+          >>> p.zs_from_s_range(0.75, 3.0)
           array('d', [17.5, 20.0, 0.0, 14.5])
-          >>> p.z_arr_for_s_range(0.75, 0.5)
+          >>> p.zs_from_s_range(0.75, 0.5)
           NotImplemented
-          >>> p.z_arr_for_s_range(-1, 1)
+          >>> p.zs_from_s_range(-1, 1)
           NotImplemented
-          >>> p.z_arr_for_s_range(-1)
+          >>> p.zs_from_s_range(-1)
           NotImplemented
-          >>> p.z_arr_for_s_range(0.0, 10)
+          >>> p.zs_from_s_range(0.0, 10)
           NotImplemented
-          >>> p.z_arr_for_s_range(0.0, 10)
+          >>> p.zs_from_s_range(0.0, 10)
           NotImplemented
-          >>> p.z_arr_for_s_range(0.0, 3.14)
+          >>> p.zs_from_s_range(0.0, 3.14)
           array('d', [10.0, 20.0, 0.0, 14.5, 17.9])
         """
 
-        if s_start < self.s_min():
+        s_subset = self.s_subset(s_start, s_end)
 
+        if s_subset is NotImplemented:
             return NotImplemented
 
-        elif s_start > self.s_max():
-
-            return NotImplemented
-
-        elif s_end is None or s_end == s_start:
-
-            return array('d', [self.z_for_s(s_start)])
-
-        elif s_end < s_start:
-
-            return NotImplemented
-
-        elif s_end > self.s_max():
-
-            return NotImplemented
-
-        else:
-
-            result = array('d', [])
-
-            s_start_upper_index_value = self.s_upper_index(s_start)
-            s_end_upper_index_value = self.s_upper_index(s_end)
-
-            if s_start < self.s(s_start_upper_index_value):
-                result.append(self.z_for_s(s_start))
-
-            for ndx in range(s_start_upper_index_value, s_end_upper_index_value):
-                result.append(self.z(ndx))
-
-            if s_end > self.s(s_end_upper_index_value - 1):
-                result.append(self.z_for_s(s_end))
-
-            return result
+        return array('d', map(self.z_for_s, s_subset))
 
 
 class Attitudes(list):
@@ -357,55 +402,6 @@ class Attitudes(list):
             check_type(el, "Attitude projection", Attitude)
 
         super(Attitudes, self).__init__(atts)
-
-    '''
-    def plot(
-            self,
-            fig,
-            section_length: numbers.Real,
-            #vertical_exaggeration: numbers.Real = 1.0,
-            plot_addit_params=None,
-            color='red'
-    ):
-        """
-        :param fig: the figure in which to plot.
-        :type fig:
-        :param section_length: the length of the current section.
-        :type section_length: numbers.Real.
-        :param plot_addit_params:
-        :param section_length:
-        :param color:
-        :return: the figure.
-        :rtype:
-        """
-
-        projected_z = [structural_attitude.z for structural_attitude in self if
-                       0.0 <= structural_attitude.s <= section_length]
-
-        projected_s = [structural_attitude.s for structural_attitude in self if
-                       0.0 <= structural_attitude.s <= section_length]
-
-        projected_ids = [structural_attitude.id for structural_attitude in self if
-                         0.0 <= structural_attitude.s <= section_length]
-
-        axes = fig.gca()
-        vertical_exaggeration = axes.get_aspect()
-
-        axes.plot(projected_s, projected_z, 'o', color=color)
-
-        # plot segments representing structural data
-
-        for structural_attitude in self:
-            if 0.0 <= structural_attitude.s <= section_length:
-
-                structural_segment_s, structural_segment_z = structural_attitude.create_segment_for_plot(
-                    section_length,
-                    vertical_exaggeration)
-
-                fig.gca().plot(structural_segment_s, structural_segment_z, '-', color=color)
-
-        return fig
-    '''
 
 
 class LinesIntersections(list):

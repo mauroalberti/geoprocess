@@ -13,7 +13,6 @@ from geoprocess.profiles.geoprofiles import *
 z_padding = 0.2
 
 
-
 @singledispatch
 def plot(
     object,
@@ -134,15 +133,22 @@ def _(
 
         else:
 
-            intersection_points, intersection_segments = parse_intersections(
-                geoprofile.topo_profile,
-                geoprofile.lines_intersections
-            )
+            for profile_part in geoprofile.lines_intersections:
+
+                id = profile_part.id
+                id_color = "orange"
+                parts = profile_part.parts
+
+                for s_range in parts:
+
+                    s_start, s_end = s_range[0], s_range[1] if len(s_range) > 1 else None
+                    s_vals = geoprofile.topo_profile.s_subset(s_start, s_end)
+                    z_vals = geoprofile.topo_profile.zs_from_s_range(s_start, s_end)
+                    fig.gca().plot(s_vals, z_vals, 'o', color=id_color)
 
     if geoprofile.polygons_intersections:
 
         pass
-
 
     return fig
 
